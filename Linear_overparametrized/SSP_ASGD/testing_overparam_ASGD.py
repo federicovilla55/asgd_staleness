@@ -153,7 +153,6 @@ loader, dim = create_linear_data_loader(
     n_samples=200, n_features=50, noise=0.0)
 
 
-
 #X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin = lin_splits
 X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin = X_tr, y_tr, X_val, y_val, X_te, y_te
 X_comb = np.vstack([X_tr_lin, X_val_lin])
@@ -234,99 +233,37 @@ class ParameterServer:
     :param param: Configuration parameters
     :type param: ConfigParameters
     """
-
-    def __init__(self, model: nn.Module, param: ConfigParameters) -> None:
+    def __init__(self, model, param):
         self.param = param
+        self.theta = [p.detach().share_memory_() for p in model.parameters()]
+        self._lock = mp.Lock()
+        self._current_ver = mp.Value("i", 0)
 
-        # Define a list with the global model parameters shared among all workers
-        self.theta = [p.detach() for p in model.parameters()]
-        for p in self.theta:
-            p.share_memory_() # Parameters are stored in a shared memory among all workers
+    def pull(self):
+        with self._lock:
+            return [p.clone() for p in self.theta], self._current_ver.value
 
-        # Lock and Multiprocessing condition variable for synchronization
-        # For safe access access to shared resources
-        self._lock = mp.Lock() 
-        self._cv = mp.Condition(self._lock)
-
-        # Shared integer for the current global version
-        self._current_version = mp.Value("i", 0)
-
-        # Shared array of integers for the current versions of each worker
-        self._worker_versions = mp.Array("i", [0]*param.num_workers)
-
-        # Multiprocessing Manager object to manage shared objects
-        self.manager = mp.Manager()
-        # Shared dictionary to store pending gradients pushed by workers
-        self._pending = self.manager.dict()
-
-    def pull(self) -> Tuple[list[torch.Tensor], int]:
+    def push(self, wid: int, w_version: int, grads: list[torch.Tensor]) -> bool:
         """
-        Fetch the current model parameters and the current version from the server.
-        This method is called by the workers to get the latest model parameters before starting their local training or when they need to synchronize with the server.
-        
-        :return: A tuple containing the current model parameters and the current version.
-        :rtype: Tuple[list[torch.Tensor], int]
+        Apply the gradient as soon as it reaches the server *iff*
+        it is not older than `staleness` steps behind the current model.
+        Return True if the update was used, False otherwise.
         """
         with self._lock:
-            return [p.clone() for p in self.theta], self._current_version.value
+            # if gradient is too stale do not consider it
+            if w_version < self._current_ver.value - self.param.staleness:
+                return False
 
-    def push(self, wid: int, version: int, grads: list[torch.Tensor]) -> None:
-        """
-        Push the gradients computed by a worker to the server for later aggregation.
-        This method is called by the workers after they have computed gradients locally.
-        If all workers have pushed their gradients for the same version, the server will aggregate them and update the model parameters.
-        The server will notify all workers when the aggregation is complete.
+            # SGD update
+            for p, g in zip(self.theta, grads):
+                p.sub_(self.param.lr * g.to(p.device))
 
-        :param wid: Worker ID of the worker pushing the gradients.
-        :type wid: int
-        :param version: Current version of the model parameters.
-        :type version: int
-        :param grads: List of gradients computed by the worker.
-        :type grads: list[torch.Tensor]
-        :return: None
-        """
+            self._current_ver.value += 1
+            return True
 
+    def get_version(self):
         with self._lock:
-            grads_np = [grad.cpu().numpy() for grad in grads] # Convert gradients to numpy arrays
-
-            # Store the gradients in the shared dictionary of pending gradient updates
-            key = (version, wid) # the key is a tuple of the update version and worker ID
-            self._pending[key] = grads_np 
-
-            # Check if all workers have pushed their gradients for this version
-            if sum(1 for key in self._pending.keys() if key[0] == version) == self.param.num_workers:
-                
-                # Aggregate all the gradients the worker pushed for this version
-                aggregated_grad = []
-                for i in range(len(grads)):
-                    grad_list = [self._pending[(version, id)][i] for id in range(self.param.num_workers)]
-                    avg_grad = np.mean(grad_list, axis=0)
-                    aggregated_grad.append(torch.from_numpy(avg_grad).to(device=self.theta[i].device))
-
-                # Update the model parameters with the aggregated gradients
-                for idx, avg_grad in enumerate(aggregated_grad):
-                    self.theta[idx].sub_(self.param.lr * avg_grad)
-                
-                # Remove the pending gradients for this version from the shared dictionary
-                for w in range(self.param.num_workers):
-                    del self._pending[(version, w)]
-
-                # Notify all workers that the global value for this version is computed
-                self._current_version.value = version
-                self._cv.notify_all()
-
-    def get_version(self) -> int:
-        """
-        Get current global version.
-        
-        :return: The current version of the model parameters.
-        :rtype: int
-        """
-
-        # A lock can be avoided as in worst case a worker will get a previous value and 
-        # therefore wait (but even with the lock a process will wait).
-        # with self._lock:
-        return self._current_version.value
+            return self._current_ver.value
 
 def worker(
     w_id: int,
@@ -371,61 +308,45 @@ def worker(
     #criterion = nn.BCELoss() # Binary Cross Entropy Loss for binary classification
     criterion = nn.MSELoss()
 
-    # Initialize the model parameters by retrieving the global model parameters from the server
-    state, version = server.pull()
-    with torch.no_grad():
-        for p, s in zip(model.parameters(), state):
-            p.copy_(s.to(device))
-    
-    # Define the local version and last checked remote version for staleness
-    local_ver = version
-    last_check = version    
+    data_it = iter(loader)
+
+    #print(f"Worker {w_id} started with model: {model}")
 
     # Run the local updates and push updates to the server
     for step in range(param.local_steps):
-        totall_loss = 0
-        num_batches = 0
-        # Each step is a full loop over the loaded portion of dataset
-        for X_batch, y_batch in loader:
-            # For each mini-batch from the worker's own data subset:
-            X_batch, y_batch = X_batch.to(device), y_batch.to(device)
-            model.train()
-            output = model(X_batch)
-            loss = criterion(output, y_batch.float())
-            loss.backward()
-            
-            # Collect gradients and store them on CPU tensors
-            grads = [p.grad.detach().cpu() for p in model.parameters()]
-            for p in model.parameters():
-                p.grad = None # Clear gradients to avoid accumulation in the next step
-            
-            # Obey to the staleness constraint by syncronizing with the server version and 
-            # updating the local model parameters if needed.
-            
-            while (local_ver - last_check) > param.staleness: # Get central parameters after param.staleness updates or less
-            #while True:
-                last_check = server.get_version()
-                state, g_ver = server.pull()
-                with torch.no_grad():
-                    for p, s in zip(model.parameters(), state):
-                        p.copy_(s.to(device))
-                local_ver = g_ver
-            
+        state, local_ver = server.pull() # Get the latest model parameters and version from the server
+        with torch.no_grad():
+            for p, s in zip(model.parameters(), state):
+                p.copy_(s.to(device))
 
-            # Update local version and push the gradients to the server
-            local_ver += 1
-            server.push(w_id, local_ver, grads)
-            num_batches += 1
-            totall_loss += loss.item()
+        # Get the next batch of data
+        try:
+            Xb, yb = next(data_it)
+        # If the iterator is exhausted, reinitialize it
+        except StopIteration:
+            data_it = iter(loader)
+            Xb, yb  = next(data_it)
 
-        avg_loss = totall_loss / num_batches
-        # EARLY‐STOP check:
-        if avg_loss < param.tol:
-            logging.info(
-                f"[Worker {w_id}] early stopping at step {step}, "
-                f"loss={loss.item():.6e} < tol={param.tol:.0e}"
-            )
-            return
+        # Move data to the device
+        Xb, yb = Xb.to(device), yb.to(device)
+
+        # Forward pass
+        out   = model(Xb)
+        loss  = criterion(out, yb.float())
+        loss.backward()
+        
+        # Detach and move gradients to CPU
+        grads = [p.grad.detach().cpu() for p in model.parameters()]
+        for p in model.parameters():
+            p.grad = None
+
+        # Compute gradients and push them to the server
+        accepted = server.push(w_id, local_ver, grads)
+
+        # If the update was accepted, it means the worker was too much stale
+        if not accepted:
+            # Should we do something in this case?
+            continue
 
 
 # 1) Tell the manager how to create a ParameterServer proxy
@@ -568,8 +489,6 @@ class LinearNetModel(nn.Module):
         # Linear layer returns (batch_size, 1), so squeeze to (batch_size,)
         return self.linear(x).squeeze(-1)
     
-
-
 def sgd_training(num_epochs = 10000, criterion = nn.MSELoss(), batch_size = 32, lr = eta_95, tol=1e-8):
     X_train, y_train = X_comb, y_comb 
 
@@ -618,10 +537,10 @@ def main():
 
     # Set up the configuration for the SSP training
     params_ssp = ConfigParameters(
-        num_workers = 3,
+        num_workers = 4,
         staleness = 10,
         lr = eta_95,
-        local_steps = 7000,
+        local_steps = 400,
         batch_size = 32,
         device = "cuda" if torch.cuda.is_available() else "cpu",
         log_level = logging.DEBUG,
