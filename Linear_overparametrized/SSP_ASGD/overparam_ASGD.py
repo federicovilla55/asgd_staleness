@@ -21,7 +21,19 @@ import multiprocessing as mp
 from dataclasses import dataclass
 from typing import Callable, Tuple
 from multiprocessing.managers import BaseManager
+<<<<<<< HEAD:Linear_overparametrized/SSP_ASGD/overparam_ASGD.py
 from collections import defaultdict
+=======
+from enum import Enum
+
+class ParameterServerStatus(Enum):
+    """
+    Enum for the status of the parameter server.
+    """
+    ACCEPTED = 0
+    REJECTED = 1
+    SHUTDOWN = 2
+>>>>>>> 3f791901c8a1886ae632d3d98846fbacbf58317b:Linear_overparametrized/SSP_ASGD/testing_overparam_ASGD.py
 
 def create_linear_dataset(n_samples=100,
                           n_features=110,
@@ -141,6 +153,14 @@ def create_poly_varied_data_loader(num_workers,
     loader = DataLoader(ds, batch_size=batch_size, shuffle=True)
     return loader, X_train.shape[1], degrees
 
+<<<<<<< HEAD:Linear_overparametrized/SSP_ASGD/overparam_ASGD.py
+=======
+# For linear dataset 
+
+# full splits
+X_tr, y_tr, X_val, y_val, X_te, y_te = load_linear_data(
+    n_samples=201, n_features=210, noise=0.0,val_size=0.01,test_size=0.2, random_state=42 )
+>>>>>>> 3f791901c8a1886ae632d3d98846fbacbf58317b:Linear_overparametrized/SSP_ASGD/testing_overparam_ASGD.py
 
 # single-worker loader
 loader, dim = create_linear_data_loader(
@@ -194,22 +214,21 @@ class ParameterServer:
     def __init__(self, model, param):
         self.param = param
         self.theta = [p.detach().share_memory_() for p in model.parameters()]
-        self._lock = mp.Lock()
         self._current_ver = mp.Value("i", 0)
 
         # one list of staleness values per worker for tracking staleness stats
         self._staleness = defaultdict(list)
 
     def pull(self):
-        with self._lock:
-            return [p.clone() for p in self.theta], self._current_ver.value
+        return [p.clone() for p in self.theta], self._current_ver.value
 
-    def push(self, wid: int, w_version: int, grads: list[torch.Tensor]) -> bool:
+    def push(self, w_version: int, grads: list[torch.Tensor]) -> ParameterServerStatus:
         """
         Apply the gradient as soon as it reaches the server *iff*
         it is not older than `staleness` steps behind the current model.
         Return True if the update was used, False otherwise.
         """
+<<<<<<< HEAD:Linear_overparametrized/SSP_ASGD/overparam_ASGD.py
         with self._lock:
             curr = self._current_ver.value
             st = curr - w_version
@@ -219,15 +238,21 @@ class ParameterServer:
             # if gradient is too stale do not consider it
             if w_version < self._current_ver.value - self.param.staleness:
                 return False
+=======
+        # if gradient is too stale do not consider it
+        if w_version < self._current_ver.value - self.param.staleness:
+            return ParameterServerStatus.REJECTED
+>>>>>>> 3f791901c8a1886ae632d3d98846fbacbf58317b:Linear_overparametrized/SSP_ASGD/testing_overparam_ASGD.py
 
-            # SGD update
-            for p, g in zip(self.theta, grads):
-                p.sub_(self.param.lr * g.to(p.device))
+        # SGD update
+        for p, g in zip(self.theta, grads):
+            p.sub_(self.param.lr * g.to(p.device))
 
-            self._current_ver.value += 1
-            return True
+        self._current_ver.value += 1
+        return ParameterServerStatus.ACCEPTED
 
     def get_version(self):
+<<<<<<< HEAD:Linear_overparametrized/SSP_ASGD/overparam_ASGD.py
         with self._lock:
             return self._current_ver.value
         
@@ -263,6 +288,9 @@ class ParameterServer:
             combined = {"mean":None, "median":None, "std":None, "pct_over_bound": None}
 
         return {"per_worker": per_worker, "combined": combined}
+=======
+        return self._current_ver.value
+>>>>>>> 3f791901c8a1886ae632d3d98846fbacbf58317b:Linear_overparametrized/SSP_ASGD/testing_overparam_ASGD.py
 
 def worker(
     w_id: int,
@@ -343,12 +371,15 @@ def worker(
             p.grad = None
 
         # Compute gradients and push them to the server
-        accepted = server.push(w_id, local_ver, grads)
+        status : ParameterServerStatus = server.push(local_ver, grads)
 
         # If the update was accepted, it means the worker was too much stale
-        if not accepted:
+        if status == ParameterServerStatus.REJECTED:
             # Should we do something in this case?
             continue
+        elif status == ParameterServerStatus.SHUTDOWN:
+            # Server is shutting down and so should the worker
+            break
 
 
 # 1) Tell the manager how to create a ParameterServer proxy
