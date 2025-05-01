@@ -1,10 +1,9 @@
-# model.py
-import torch.nn as nn
+from torch import nn
 import torch
 
 class LinearNetModel(nn.Module):
     """
-    Simple Linear Neural Network Model
+    Simple Linear Regression Model
 
     :param input_dim: Number of model input features.
     :type input_dim: int
@@ -13,17 +12,18 @@ class LinearNetModel(nn.Module):
     """
     def __init__(self, input_dim: int, bias: bool = True):
         super().__init__()
+        # A single linear layer mapping input_dim features to a single output
         self.linear = nn.Linear(input_dim, 1, bias=bias)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass of the model. 
-        It applies a sigmoid activation function to the output of the linear layer.
+        Forward pass of the model.
+        Applies a linear transformation without any activation, returning the raw output.
 
-        :param x: Input tensor of shape `batch_size`, `input_dim`.
+        :param x: Input tensor of shape (batch_size, input_dim).
         :type x: torch.Tensor
-        :return: Output tensor after sigmoid activation.
+        :return: Output tensor of shape (batch_size,).
         :rtype: torch.Tensor
-        :raises ValueError: If the input tensor does not have the expected shape.
         """
-        return torch.sigmoid(self.linear(x)).squeeze(-1)
+        # Linear layer returns (batch_size, 1), so squeeze to (batch_size,)
+        return self.linear(x).squeeze(-1)
