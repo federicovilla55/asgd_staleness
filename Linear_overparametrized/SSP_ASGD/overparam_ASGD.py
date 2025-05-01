@@ -21,7 +21,7 @@ import multiprocessing as mp
 from dataclasses import dataclass
 from typing import Callable, Tuple
 from multiprocessing.managers import BaseManager
-
+from collections import defaultdict
 
 def create_linear_dataset(n_samples=100,
                           n_features=110,
@@ -59,7 +59,7 @@ def create_poly_varied_dataset(n_samples=100,
     y = X_pow.dot(w_true) + noise * rng.randn(n_samples)
     return X.astype(np.float32), y.astype(np.float32), degrees
 
-def split_data(X, y, val_size=0.01, test_size=0.2, random_state=None):
+def split_data(X, y, val_size=0.0, test_size=0.2, random_state=None):
     """
     Splits (X, y) into train/val/test.
       - train: (1 - val_size - test_size)
@@ -78,7 +78,7 @@ def load_linear_data(n_samples=100,
                      noise=0.0,
                      val_size=0.01,
                      test_size=0.2,
-                     random_state=42):
+                     random_state=None):
     """
     Generate a linear overparam dataset and split it.
     Returns: X_train, y_train, X_val, y_val, X_test, y_test
@@ -141,11 +141,6 @@ def create_poly_varied_data_loader(num_workers,
     loader = DataLoader(ds, batch_size=batch_size, shuffle=True)
     return loader, X_train.shape[1], degrees
 
-# For linear dataset 
-
-# full splits
-X_tr, y_tr, X_val, y_val, X_te, y_te = load_linear_data(
-    n_samples=101, n_features=110, noise=0.0,val_size=0.01,test_size=0.2, random_state=42 )
 
 # single-worker loader
 loader, dim = create_linear_data_loader(
@@ -153,43 +148,6 @@ loader, dim = create_linear_data_loader(
     n_samples=200, n_features=50, noise=0.0)
 
 
-#X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin = lin_splits
-X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin = X_tr, y_tr, X_val, y_val, X_te, y_te
-X_comb = np.vstack([X_tr_lin, X_val_lin])
-y_comb = np.concatenate([y_tr_lin, y_val_lin])
-n, d = X_comb.shape
-rng = np.random.RandomState(42)
-scale = 5   # avoids huge outliers
-# Amount of initializations
-init_ws = rng.uniform(-scale, scale, size=(1, d))
-np.save('linear_init_weights.npy', init_ws)
-
-# 3) Compute 95% of max stable step size η₉₅
-_, S_comb, _ = svd(X_comb, full_matrices=False)
-eta_max = 2.0 / (S_comb[0]**2)
-eta_95  = 0.95 * eta_max
-def create_full_data_loader(num_workers: int,
-                            batch_size:   int,
-                            worker_id:    int
-                           ) -> Tuple[DataLoader, int]:
-    """
-    Gives *every* worker the same full train+val set (X_comb, y_comb),
-    but shuffle=True so each draws random mini‑batches independently.
-    """
-    # X_comb, y_comb come from your earlier split:
-    #   X_comb = np.vstack([X_tr, X_val])
-    #   y_comb = np.concatenate([y_tr, y_val])
-    ds     = TensorDataset(
-                torch.from_numpy(X_comb).float(),
-                torch.from_numpy(y_comb).float()
-             )
-    loader = DataLoader(
-                ds,
-                batch_size=batch_size,
-                shuffle=True,
-                drop_last=False
-             )
-    return loader, X_comb.shape[1]
 
 @dataclass
 class ConfigParameters:
@@ -214,7 +172,7 @@ class ConfigParameters:
     num_workers: int = 4
     staleness: int = 2
     lr: float  = 0.01
-    local_steps: int = 500 
+    local_steps: int = 1 
     batch_size: int = 32
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
     log_level: int = logging.INFO
@@ -239,6 +197,9 @@ class ParameterServer:
         self._lock = mp.Lock()
         self._current_ver = mp.Value("i", 0)
 
+        # one list of staleness values per worker for tracking staleness stats
+        self._staleness = defaultdict(list)
+
     def pull(self):
         with self._lock:
             return [p.clone() for p in self.theta], self._current_ver.value
@@ -250,6 +211,11 @@ class ParameterServer:
         Return True if the update was used, False otherwise.
         """
         with self._lock:
+            curr = self._current_ver.value
+            st = curr - w_version
+            # record staleness of each worker regardless of accept/reject
+            self._staleness[wid].append(st)
+
             # if gradient is too stale do not consider it
             if w_version < self._current_ver.value - self.param.staleness:
                 return False
@@ -264,6 +230,39 @@ class ParameterServer:
     def get_version(self):
         with self._lock:
             return self._current_ver.value
+        
+    def get_staleness_stats(self):
+        """
+        Returns a dict:
+        {"per_worker": { wid: { "mean":…, "median":…, "std":…, "pct_over_bound":…}, …},"combined": {"mean":…,"median":…,"std":…,"pct_over_bound":…}}
+        """
+        per_worker = {}
+        all_vals = []
+
+        bound = self.param.staleness
+
+        for wid, vals in self._staleness.items():
+            arr = np.array(vals, dtype=float)
+            if arr.size:
+                mean   = float(arr.mean())
+                median = float(np.median(arr))
+                std    = float(arr.std())
+                # compute fraction > bound
+                over   = (arr > bound).sum()
+                pct    = float(over) / arr.size * 100.0
+
+                per_worker[wid] = {"mean":mean, "median": median, "std":std, "pct_over_bound": pct}
+                all_vals.append(arr)
+            else:
+                per_worker[wid] = {"mean": None, "median": None, "std":None, "pct_over_bound": None}
+
+        if all_vals:
+            all_concat = np.concatenate(all_vals)
+            combined = {"mean":float(all_concat.mean()), "median":float(np.median(all_concat)), "std":float(all_concat.std()), "pct_over_bound": float((all_concat > bound).sum()) / all_concat.size * 100.0}
+        else:
+            combined = {"mean":None, "median":None, "std":None, "pct_over_bound": None}
+
+        return {"per_worker": per_worker, "combined": combined}
 
 def worker(
     w_id: int,
@@ -271,7 +270,8 @@ def worker(
     model: Callable[[int], nn.Module],
     input_dim:  int,
     dataset_builder: Callable[[int,int,int], Tuple[torch.utils.data.DataLoader,int]],
-    param: ConfigParameters
+    param: ConfigParameters,
+    start_evt
 ) -> None:
     """
     Worker function for Stale Synchronous Parallel training.
@@ -290,7 +290,7 @@ def worker(
     :type param: ConfigParameters
     :return: None
     """
-
+    start_evt.wait() # Wait untill all workers are created so they start at the same time
     # Basic logging configuration
     logging.basicConfig(
         level=param.log_level,
@@ -307,8 +307,8 @@ def worker(
     model = model(input_dim).to(device)
     #criterion = nn.BCELoss() # Binary Cross Entropy Loss for binary classification
     criterion = nn.MSELoss()
-
-    data_it = iter(loader)
+    tol = 1e-8
+    data_it = iter(loader)  
 
     #print(f"Worker {w_id} started with model: {model}")
 
@@ -334,7 +334,9 @@ def worker(
         out   = model(Xb)
         loss  = criterion(out, yb.float())
         loss.backward()
-        
+        if loss.item() < tol:
+            print(f" Worker {w_id} stopping at step {step}: loss {loss.item():.2e} < {tol:.0e}")
+            break
         # Detach and move gradients to CPU
         grads = [p.grad.detach().cpu() for p in model.parameters()]
         for p in model.parameters():
@@ -352,6 +354,7 @@ def worker(
 # 1) Tell the manager how to create a ParameterServer proxy
 class PSManager(BaseManager): pass
 PSManager.register('ParameterServer', ParameterServer)
+PSManager.register('get_staleness_stats', ParameterServer.get_staleness_stats)
 
 def run_ssp_training(
     dataset_builder: Callable[[int, int,int], Tuple[torch.utils.data.DataLoader,int]],
@@ -383,15 +386,17 @@ def run_ssp_training(
     # Use either "fork" or "spawn" based on your OS ("fork" on Linux)
     ctx = mp.get_context("spawn") # Context for multiprocessing
     procs = [] # List to hold the processes
+    start_evt = ctx.Event() # Create event so that all workers start at the same time
     for id in range(param.num_workers):
         p = ctx.Process(
             target=worker, # Worker function
-            args=(id, ps_proxy, model, input_dim, dataset_builder, param), # Arguments for the worker function
+            args=(id, ps_proxy, model, input_dim, dataset_builder, param, start_evt), # Arguments for the worker function
             daemon=False, # Daemon processes are not used as they are killed when the main process exits
         )
         p.start() # Start the worker process
         procs.append(p) # Append the process to the list
-
+    
+    start_evt.set() # Start all the workers at the same time
     for p in procs:
         p.join() # Wait for all processes to finish
         if p.exitcode != 0: # Check if the process exited with an error
@@ -403,7 +408,10 @@ def run_ssp_training(
     #print("Final Version: ", ps.get_version())
     #logging.info("SSP training finished")
 
-    return theta, input_dim
+    # Return the staleness stats for the workers
+    stats    = ps_proxy.get_staleness_stats()
+    return theta, input_dim, stats
+
 
 def build_model(theta: list[torch.Tensor], model, input_dim: int) -> nn.Module:
     """
@@ -457,8 +465,6 @@ def evaluate_model(name:str, model: nn.Module, X_eval: np.ndarray, y_eval: np.nd
 
         # Compute MSE
         mse = criterion(y_pred, y_tensor).item()
-
-    print(f"{name} Test MSE = {mse:.6f}")
     return mse
         
 
@@ -489,8 +495,7 @@ class LinearNetModel(nn.Module):
         # Linear layer returns (batch_size, 1), so squeeze to (batch_size,)
         return self.linear(x).squeeze(-1)
     
-def sgd_training(num_epochs = 10000, criterion = nn.MSELoss(), batch_size = 32, lr = eta_95, tol=1e-8):
-    X_train, y_train = X_comb, y_comb 
+def sgd_training(X_train, y_train, num_epochs = 10000, criterion = nn.MSELoss(), batch_size = 32, lr = 0.01, tol=1e-8):
 
     # Create a linear model with dimention equal to the number of features
     # in the dataset
@@ -520,10 +525,6 @@ def sgd_training(num_epochs = 10000, criterion = nn.MSELoss(), batch_size = 32, 
             num_batches += 1
         
         avg_loss = total_epoch_loss / num_batches
-        # Print every 1000 epochs
-        if epoch % 1000 == 0:
-            print(f"[Epoch {epoch:5d}] Avg Loss = {avg_loss:.6f}")
-
         # Early stopping
         if avg_loss < tol:
             print(f"Stopping early at epoch {epoch} with avg loss {avg_loss:.6f} < tol={tol}")
@@ -531,52 +532,109 @@ def sgd_training(num_epochs = 10000, criterion = nn.MSELoss(), batch_size = 32, 
 
     return model
 
+class FullDataLoaderBuilder:
+    def __init__(self, X: np.ndarray, y: np.ndarray):
+        self.X = X.astype(np.float32)
+        self.y = y.astype(np.float32)
+
+    def __call__(self, num_workers: int, batch_size: int, worker_id: int):
+        ds     = TensorDataset(torch.from_numpy(self.X),
+                               torch.from_numpy(self.y))
+        loader = DataLoader(ds, batch_size=batch_size,
+                            shuffle=True, drop_last=False)
+        return loader, self.X.shape[1]
+    
 def main():
     # Set up logging
     logging.basicConfig(level=logging.INFO)
 
-    # Set up the configuration for the SSP training
-    params_ssp = ConfigParameters(
-        num_workers = 4,
-        staleness = 10,
-        lr = eta_95,
-        local_steps = 400,
-        batch_size = 32,
-        device = "cuda" if torch.cuda.is_available() else "cpu",
-        log_level = logging.DEBUG,
-        tol = 1e-8,
-    )
 
-    # Dataset builder function
-    dataset_builder = create_full_data_loader
-    # Model class
-    model = LinearNetModel
+    RUNS = 1
+    SGD_losses = []
+    ASGD_losses = []
+    for run in range(RUNS):
+
+        # full splits
+        X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin = load_linear_data(n_samples=100, n_features=110, noise=0.0,val_size=0.01,test_size=0.2, random_state= None )
+
+        X_comb = np.vstack([X_tr_lin, X_val_lin])
+        y_comb = np.concatenate([y_tr_lin, y_val_lin])
+
+        # 3) Compute 95% of max stable step size η₉₅
+        _, S_comb, _ = svd(X_comb, full_matrices=False)
+        eta_max = 2.0 / (S_comb[0]**2)
+        eta_95  = 0.95 * eta_max
+
+        #Run the baseline
+        # run baseline for comparison
+        print("start baseline training for run:" + str(run))
+        start = time.perf_counter()
+        sgd_model = sgd_training(X_comb, y_comb, num_epochs = 10000, criterion = nn.MSELoss(), batch_size = 32, lr = eta_95, tol=1e-8)
+        end = time.perf_counter()
+        sgd_time = end-start
+        print("Baseline part is done for run:" + str(run))
+        
+        # Dataset builder function
+        dataset_builder = FullDataLoaderBuilder(X_comb, y_comb)
+        # Model class
+        model = LinearNetModel
+
+        # Set up the configuration for the SSP training
+        params_ssp = ConfigParameters(
+            num_workers = 5,
+            staleness = 10,
+            lr = eta_95,
+            local_steps = 10000,
+            batch_size = 32,
+            device = "cuda" if torch.cuda.is_available() else "cpu",
+            log_level = logging.DEBUG,
+            tol = 1e-8,                             # The tol for workers is currently set at tol = 1e-8
+        )
+
+        # Run the SSP training and measure the time taken
+        print("Start ASGD training for run:" + str(run))
+        start = time.perf_counter()
+        asgd_params, dim, stats = run_ssp_training(dataset_builder, model, params_ssp)
+        end = time.perf_counter()
+        asgd_time = end - start
+        
+        print(f"{'Worker':>6s}  {'Mean':>8s}  {'Median':>8s}  {'Std':>8s}  {'%Over':>8s}")
+        print("-" * 45) 
+
+        # Per-worker stats
+        for wid, s in sorted(stats["per_worker"].items()):
+            mean    = s["mean"]
+            median  = s["median"]
+            std     = s["std"]
+            pct_over = s["pct_over_bound"]
+            print(f"{wid:6d}  {mean:8.4f}  {median:8.4f}  {std:8.4f}  {pct_over:8.2f}")
+
+        # Combined stats
+        c = stats["combined"]
+        print("\nCombined over all workers:")
+        print(f"  Mean         = {c['mean']:.4f}")
+        print(f"  Median       = {c['median']:.4f}")
+        print(f"  Std          = {c['std']:.4f}")
+        print(f"  % Over Bound = {c['pct_over_bound']:.2f}%")
+
+        # Evaluate the trained model on the test set
+        asgd_model = build_model(asgd_params, model, dim)
+
+        ASGD_loss = evaluate_model("ASGD", asgd_model, X_te_lin, y_te_lin)
+
+        ASGD_losses.append(ASGD_loss)
+
+        SGD_loss = evaluate_model("SGD", sgd_model, X_te_lin, y_te_lin)
+
+        SGD_losses.append(SGD_loss)
+
+        print("Time Comparison for run:" + str(run) + f": ASGD {asgd_time:2f} sec;\tSGD {sgd_time:2f} sec")
     
-    #Run the baseline
-    # run baseline for comparison
-    print("start baseline training")
-    start = time.perf_counter()
-    sgd_model = sgd_training()
-    end = time.perf_counter()
-    sgd_time = end-start
-    print("Baseline part is done")
+    avg_ASGD_loss = sum(ASGD_losses)/len(ASGD_losses)
+    avg_SGD_loss = sum(SGD_losses)/len(SGD_losses)
 
-    # Run the SSP training and measure the time taken
-    print("Start ASGD training")
-    start = time.perf_counter()
-    asgd_params, dim = run_ssp_training(dataset_builder, model, params_ssp)
-    end = time.perf_counter()
-    asgd_time = end - start
-
-    # Evaluate the trained model on the test set
-    #_, X_test, _, y_test = load_adult_data()
-    asgd_model = build_model(asgd_params, model, dim)
-
-    evaluate_model("ASGD", asgd_model, X_te_lin, y_te_lin)
-
-    evaluate_model("SGD", sgd_model, X_te_lin, y_te_lin)
-
-    print(f"Time Comparison: ASGD {asgd_time:2f} sec;\tSGD {sgd_time:2f} sec")
+    print("Average ASGD loss =" + str(avg_ASGD_loss))
+    print("Average SGD loss =" + str(avg_SGD_loss))
 
 if __name__ == "__main__":
     main()
