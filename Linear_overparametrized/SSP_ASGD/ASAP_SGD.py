@@ -24,6 +24,10 @@ from multiprocessing.managers import BaseManager
 from collections import defaultdict
 from enum import Enum
 import threading
+import random
+import pickle
+import os
+from scipy.stats import ttest_rel
 
 class ParameterServerStatus(Enum):
     """
@@ -181,6 +185,7 @@ class ConfigParameters:
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
     log_level: int = logging.INFO
     tol: float = 1e-8
+    Amplitude: float = 1  # The maximum amplitude deviation from the base step size
 
 class ParameterServer:
     """
@@ -202,29 +207,34 @@ class ParameterServer:
         self._lock = threading.Lock()
         # one list of staleness values per worker for tracking staleness stats
         self._staleness = defaultdict(list)
+        self.hist = [0] * (param.staleness +1) # We assume max staleness is 50, so easier data structure for F computation possible
+        self.total = 0
 
     def pull(self):
         return [p.clone() for p in self.theta], self._current_ver.value
 
     def push(self, wid, w_version: int, grads: list[torch.Tensor]) -> ParameterServerStatus:
-        """
-        Apply the gradient as soon as it reaches the server *iff*
-        it is not older than `staleness` steps behind the current model.
-        Return True if the update was used, False otherwise.
-        """
         with self._lock:
             curr = self._current_ver.value
             st = curr - w_version
             # record staleness of each worker regardless of accept/reject
             self._staleness[wid].append(st)
 
-            # if gradient is too stale do not consider it
-            if w_version < self._current_ver.value - self.param.staleness:
+            if st >= self.param.staleness:
                 return ParameterServerStatus.REJECTED
+            
+            self.hist[st] += 1
+            self.total += 1
 
-        # SGD update
-        for p, g in zip(self.theta, grads):
-            p.sub_(self.param.lr * g.to(p.device))
+            # empirical CDF of staleness up to (and including) this value => ASAP SGD implementation
+            cum = sum(self.hist[: st+1])
+            F = cum / self.total
+            CA = 1 + self.param.Amplitude * (1 - 2 * F)
+            scaled_lr = CA * self.param.lr
+
+            # SGD update
+            for p, g in zip(self.theta, grads):
+                p.sub_(scaled_lr * g.to(p.device))
 
         self._current_ver.value += 1
         return ParameterServerStatus.ACCEPTED
@@ -307,12 +317,10 @@ def worker(
     # Create the model and loss function
     device = torch.device(param.device)
     model = model(input_dim).to(device)
-    #criterion = nn.BCELoss() # Binary Cross Entropy Loss for binary classification
     criterion = nn.MSELoss()
     tol = 1e-8
     data_it = iter(loader)  
 
-    #print(f"Worker {w_id} started with model: {model}")
 
     # Run the local updates and push updates to the server
     for step in range(param.local_steps):
@@ -337,12 +345,18 @@ def worker(
         loss  = criterion(out, yb.float())
         loss.backward()
         if loss.item() < tol:
-            print(f" Worker {w_id} stopping at step {step}: loss {loss.item():.2e} < {tol:.0e}")
+            #print(f" Worker {w_id} stopping at step {step}: loss {loss.item():.2e} < {tol:.0e}")
             break
         # Detach and move gradients to CPU
         grads = [p.grad.detach().cpu() for p in model.parameters()]
         for p in model.parameters():
             p.grad = None
+
+        # simulate a continuous delay => Using random exponential distribution (so it mimics real case) 
+        mean_stale = param.num_workers - 1
+        time_scale = 1e-4
+        delay = np.random.exponential(scale=mean_stale*time_scale)
+        time.sleep(delay)
 
         # Compute gradients and push them to the server
         status : ParameterServerStatus = server.push(w_id, local_ver, grads)
@@ -553,93 +567,238 @@ def main():
     # Set up logging
     logging.basicConfig(level=logging.INFO)
 
+    # Fix the master seed so you always get the same “sub‑seeds”
+    random.seed(1234)
+    # Draw 100 integers in [0, 2^8)
+    seeds = [random.randrange(2**8) for _ in range(100)]  # If you change the amount of seeds, the first n will still always be the same !
 
-    RUNS = 1
-    SGD_losses = []
-    ASGD_losses = []
-    for run in range(RUNS):
+    # FILES FOR CHECKPOINTING
+    sgd_losses_f = 'sgd_losses.pkl'
+    asgd_losses_f = 'ASGD_first_losses.pkl'
+    asgd_stats_f  = 'ASGD_first_stats.pkl'
 
-        # full splits
-        X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin = load_linear_data(n_samples=100, n_features=110, noise=0.0,val_size=0.01,test_size=0.2, random_state= None )
+    # get the directory this script lives in
+    script_dir = os.path.dirname(os.path.abspath(__file__))
 
-        X_comb = np.vstack([X_tr_lin, X_val_lin])
-        y_comb = np.concatenate([y_tr_lin, y_val_lin])
+    # then for each checkpoint file
+    sgd_losses_file = os.path.join(script_dir, sgd_losses_f)
+    asgd_losses_file = os.path.join(script_dir, asgd_losses_f)
+    asgd_stats_file  = os.path.join(script_dir, asgd_stats_f)
 
-        # 3) Compute 95% of max stable step size η₉₅
-        _, S_comb, _ = svd(X_comb, full_matrices=False)
-        eta_max = 2.0 / (S_comb[0]**2)
-        eta_95  = 0.95 * eta_max
+    # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
+    RUNS_REGULAR_SGD = 1       # Set always min to 1 for both methods (if want to retrieve/use the stored values)
+    RUNS_ASGD = 1
 
-        #Run the baseline
-        # run baseline for comparison
-        print("start baseline training for run:" + str(run))
-        start = time.perf_counter()
-        sgd_model = sgd_training(X_comb, y_comb, num_epochs = 10000, criterion = nn.MSELoss(), batch_size = 32, lr = eta_95, tol=1e-8)
-        end = time.perf_counter()
-        sgd_time = end-start
-        print("Baseline part is done for run:" + str(run))
+    if RUNS_REGULAR_SGD > 0:
+        losses_file = sgd_losses_file
+        if os.path.exists(losses_file):
+            with open(losses_file, 'rb') as f:
+                SGD_losses = pickle.load(f)
+            logging.info(f"Resuming: {len(SGD_losses)}/{len(seeds)} seeds done")
+        else:
+            SGD_losses = []
+            logging.info("Starting fresh, no existing losses file found")
+
+        # Pick up where you left off
+        start_idx = len(SGD_losses)
+        for idx in range(start_idx, len(seeds)):
+            seed = seeds[idx]
+            
+            if RUNS_REGULAR_SGD == 0:
+                print("Performed the specified amount of runs for regular SGD")
+                break
+            RUNS_REGULAR_SGD = RUNS_REGULAR_SGD - 1
+
+            # full splits => Always the same when using the same seed
+            X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin = load_linear_data(n_samples=100, n_features=110, noise=0.0,val_size=0.01,test_size=0.2, random_state= seed)
+
+            X_comb = np.vstack([X_tr_lin, X_val_lin])
+            y_comb = np.concatenate([y_tr_lin, y_val_lin])
+
+            # 3) Compute 95% of max stable step size η₉₅
+            _, S_comb, _ = svd(X_comb, full_matrices=False)
+            eta_max = 2.0 / (S_comb[0]**2)
+            eta_95  = 0.95 * eta_max
+
+            start = time.perf_counter()
+            sgd_model = sgd_training(X_comb, y_comb, num_epochs = 10000, criterion = nn.MSELoss(), batch_size = 32, lr = eta_95, tol=1e-8)
+            end = time.perf_counter()
+            sgd_time = end-start
+
+            SGD_loss = evaluate_model("SGD", sgd_model, X_te_lin, y_te_lin)
+
+            SGD_losses.append(SGD_loss)
+
+            print("Time Comparison for run:" + str(idx) + f":SGD {sgd_time:2f} sec")
         
-        # Dataset builder function
-        dataset_builder = FullDataLoaderBuilder(X_comb, y_comb)
-        # Model class
-        model = LinearNetModel
 
-        # Set up the configuration for the SSP training
-        params_ssp = ConfigParameters(
-            num_workers = 25,
-            staleness = 10,
-            lr = eta_95,
-            local_steps = 10000,
-            batch_size = 32,
-            device = "cuda" if torch.cuda.is_available() else "cpu",
-            log_level = logging.DEBUG,
-            tol = 1e-8,                             # The tol for workers is currently set at tol = 1e-8
-        )
+        # SAVE THIS LIST
+        with open(sgd_losses_file, 'wb') as f:
+            pickle.dump(SGD_losses, f)
 
-        # Run the SSP training and measure the time taken
-        print("Start ASGD training for run:" + str(run))
-        start = time.perf_counter()
-        asgd_params, dim, stats = run_ssp_training(dataset_builder, model, params_ssp)
-        end = time.perf_counter()
-        asgd_time = end - start
+        with open(sgd_losses_file, 'rb') as f:
+            SGD_losses = pickle.load(f)
+        print("Retrieved regular SGD losses")
+
+        avg_SGD_loss = sum(SGD_losses)/len(SGD_losses)
+        print("Average SGD loss =" + str(avg_SGD_loss))
+
+    if RUNS_ASGD > 0:
+        # INIT/RETRIEVE LOSSES
+        losses_file = asgd_losses_file
+        if os.path.exists(losses_file):
+            with open(losses_file, 'rb') as f:
+                ASGD_losses = pickle.load(f)
+            logging.info(f"Resuming: {len(ASGD_losses)}/{len(seeds)} seeds done")
+        else:
+            ASGD_losses = []
+            logging.info("Starting fresh, no existing losses file found")
+
+        # INIT/RETRIEVE WORKER STATS
+        if os.path.exists(asgd_stats_file):
+            with open(asgd_stats_file, 'rb') as f:
+                ASGD_stats = pickle.load(f)
+            logging.info(f"Resuming stats: {len(ASGD_stats)}/{len(seeds)} done")
+        else:
+            ASGD_stats = []
+            logging.info("Starting fresh on stats")
+
+        # Pick up where you left off
+        start_idx = len(ASGD_losses)
+        for idx in range(start_idx, len(seeds)):
+            seed = seeds[idx]
+
+            if RUNS_ASGD == 0:
+                print("Performed the specified amount of runs for ASGD")
+                break
+            RUNS_ASGD = RUNS_ASGD - 1
+
+            # full splits => Always the same when using the same seed
+            X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin = load_linear_data(n_samples=100, n_features=110, noise=0.0,val_size=0.01,test_size=0.2, random_state= seed)
+
+            X_comb = np.vstack([X_tr_lin, X_val_lin])
+            y_comb = np.concatenate([y_tr_lin, y_val_lin])
+
+            # 3) Compute 95% of max stable step size η₉₅
+            _, S_comb, _ = svd(X_comb, full_matrices=False)
+            eta_max = 2.0 / (S_comb[0]**2)
+            eta_95  = 0.95 * eta_max
+            
+            # Dataset builder function
+            dataset_builder = FullDataLoaderBuilder(X_comb, y_comb)
+            # Model class
+            model = LinearNetModel
+
+            # Set up the configuration for the SSP training
+            params_ssp = ConfigParameters(
+                num_workers = 10,
+                staleness = 50, 
+                lr = eta_95/2,                          # HERE DIVIDED BY 2 SO THAT MAX LR = (1+A)*LR = ETA_95 => Otherwise very high test loss and bad convergence !!
+                local_steps = 10000,
+                batch_size = 32,
+                device = "cuda" if torch.cuda.is_available() else "cpu",
+                log_level = logging.DEBUG,
+                tol = 1e-8,                             # The tol for workers is currently set at tol = 1e-8
+                Amplitude = 1                           # The max amplitude deviation from the base stepsize
+            )
+
+            # Run the SSP training and measure the time taken
+            start = time.perf_counter()
+            asgd_params, dim, stats = run_ssp_training(dataset_builder, model, params_ssp)
+            end = time.perf_counter()
+            asgd_time = end - start
+            ASGD_stats.append(stats)
+
+            '''
+            print(f"{'Worker':>6s}  {'Mean':>8s}  {'Median':>8s}  {'Std':>8s}  {'%Over':>8s}")
+            print("-" * 45) 
+
+            # Per-worker stats
+            for wid, s in sorted(stats["per_worker"].items()):
+                mean    = s["mean"]
+                median  = s["median"]
+                std     = s["std"]
+                pct_over = s["pct_over_bound"]
+                print(f"{wid:6d}  {mean:8.4f}  {median:8.4f}  {std:8.4f}  {pct_over:8.2f}")
+
+            # Combined stats
+            c = stats["combined"]
+            print("\nCombined over all workers:")
+            print(f"  Mean         = {c['mean']:.4f}")
+            print(f"  Median       = {c['median']:.4f}")
+            print(f"  Std          = {c['std']:.4f}")
+            print(f"  % Over Bound = {c['pct_over_bound']:.2f}%")
+            '''
+
+            # Evaluate the trained model on the test set
+            asgd_model = build_model(asgd_params, model, dim)
+
+            ASGD_loss = evaluate_model("ASGD", asgd_model, X_te_lin, y_te_lin)
+
+            ASGD_losses.append(ASGD_loss)
+
+            print("Time Comparison for run:" + str(idx) + f": ASGD {asgd_time:2f} sec")
+
+        # SAVE THE LOSSES
+        with open(asgd_losses_file, 'wb') as f:
+            pickle.dump(ASGD_losses, f)
+
+        with open(asgd_losses_file, 'rb') as f:
+            ASGD_losses = pickle.load(f)
+        print("Retrieved ASGD losses")
         
-        print(f"{'Worker':>6s}  {'Mean':>8s}  {'Median':>8s}  {'Std':>8s}  {'%Over':>8s}")
-        print("-" * 45) 
+        avg_ASGD_loss = sum(ASGD_losses)/len(ASGD_losses)
 
-        # Per-worker stats
-        for wid, s in sorted(stats["per_worker"].items()):
-            mean    = s["mean"]
-            median  = s["median"]
-            std     = s["std"]
-            pct_over = s["pct_over_bound"]
-            print(f"{wid:6d}  {mean:8.4f}  {median:8.4f}  {std:8.4f}  {pct_over:8.2f}")
+        print("Average ASGD loss =" + str(avg_ASGD_loss))
 
-        # Combined stats
-        c = stats["combined"]
-        print("\nCombined over all workers:")
-        print(f"  Mean         = {c['mean']:.4f}")
-        print(f"  Median       = {c['median']:.4f}")
-        print(f"  Std          = {c['std']:.4f}")
-        print(f"  % Over Bound = {c['pct_over_bound']:.2f}%")
+        #SAVE THE WORKER STATS
+        with open(asgd_stats_file, 'wb') as f:
+            pickle.dump(ASGD_stats, f)
 
-        # Evaluate the trained model on the test set
-        asgd_model = build_model(asgd_params, model, dim)
-
-        ASGD_loss = evaluate_model("ASGD", asgd_model, X_te_lin, y_te_lin)
-
-        ASGD_losses.append(ASGD_loss)
-
-        SGD_loss = evaluate_model("SGD", sgd_model, X_te_lin, y_te_lin)
-
-        SGD_losses.append(SGD_loss)
-
-        print("Time Comparison for run:" + str(run) + f": ASGD {asgd_time:2f} sec;\tSGD {sgd_time:2f} sec")
+        # If you want to inspect the stats you can do:
+        # with open(stats_file, 'rb') as f:
+        #     ASGD_stats = pickle.load(f)
+        # now ASGD_stats is a list of dicts, each having
+        #   stats["per_worker"] and stats["combined"]
     
-    avg_ASGD_loss = sum(ASGD_losses)/len(ASGD_losses)
-    avg_SGD_loss = sum(SGD_losses)/len(SGD_losses)
+    # COMPARE LOSSES FOR THE SEEDS THAT HAVE BEEN USED IN BOTH METHODS UNTIL NOW
 
-    print("Average ASGD loss =" + str(avg_ASGD_loss))
-    print("Average SGD loss =" + str(avg_SGD_loss))
+    # Align lengths (in case one list is longer because of incomplete runs)
+    n = min(len(SGD_losses), len(ASGD_losses))
+    sgd_losses = SGD_losses[:n]
+    asgd_losses = ASGD_losses[:n]
+
+    # Compute difference: SGD_loss - ASGD_loss
+    diffs = np.array(sgd_losses) - np.array(asgd_losses)
+
+    # COMPUTE PAIRED T-TEST
+    t_stat, p_value = ttest_rel(sgd_losses, asgd_losses, nan_policy='omit')
+
+    print(f"Paired t-test over {n} runs:")
+    print(f"  t-statistic = {t_stat:.4f}")
+    print(f"  p-value     = {p_value:.4e}")
+
+    # Summary statistics
+    mean_diff = np.mean(diffs)
+    median_diff = np.median(diffs)
+    std_diff = np.std(diffs)
+
+    print(f"Computed over {n} seeds:")
+    print(f"Mean difference (SGD - ASGD): {mean_diff:.4e}")
+    print(f"Median difference: {median_diff:.4e}")
+    print(f"Std of difference: {std_diff:.4e}")
+
+    # Plot histogram of differences
+    plt.figure()
+    plt.hist(diffs, bins=20, edgecolor='black')
+    plt.axvline(mean_diff, color='red', linestyle='dashed', linewidth=1, label=f"Mean: {mean_diff:.2e}")
+    plt.axvline(median_diff, color='blue', linestyle='dotted', linewidth=1, label=f"Median: {median_diff:.2e}")
+    plt.xlabel("SGD_loss - ASGD_loss")
+    plt.ylabel("Frequency")
+    plt.title("Distribution of Loss Differences (SGD vs. ASGD)")
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
 
 if __name__ == "__main__":
     main()
