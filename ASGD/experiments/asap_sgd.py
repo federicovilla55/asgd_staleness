@@ -168,7 +168,7 @@ def main():
 
             # Run the SSP training and measure the time taken
             start = time.perf_counter()
-            asgd_params, dim, stats = run_ssp_training(dataset_builder, model, params_ssp, ParameterServer, worker)
+            asgd_params, dim, stats = run_training(dataset_builder, model, params_ssp, ParameterServer, worker)
             end = time.perf_counter()
             asgd_time = end - start
             ASGD_stats.append(stats)

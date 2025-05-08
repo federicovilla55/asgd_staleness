@@ -16,7 +16,7 @@ from ..models.base import ModelFactory
 from typing import Callable
 from multiprocessing.managers import BaseManager
 
-def run_ssp_training(
+def run_training(
     dataset_builder: Callable[[int, int,int], Tuple[torch.utils.data.DataLoader,int]],
     model: Callable[[int], nn.Module],
     param: ConfigParameters = ConfigParameters(),
