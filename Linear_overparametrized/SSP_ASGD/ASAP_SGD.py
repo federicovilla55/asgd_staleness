@@ -772,11 +772,12 @@ def main():
     diffs = np.array(sgd_losses) - np.array(asgd_losses)
 
     # COMPUTE PAIRED T-TEST
-    t_stat, p_value = ttest_rel(sgd_losses, asgd_losses, nan_policy='omit')
+    if n > 1:
+        t_stat, p_value = ttest_rel(sgd_losses, asgd_losses, nan_policy='omit')
 
-    print(f"Paired t-test over {n} runs:")
-    print(f"  t-statistic = {t_stat:.4f}")
-    print(f"  p-value     = {p_value:.4e}")
+        print(f"Paired t-test over {n} runs:")
+        print(f"  t-statistic = {t_stat:.4f}")
+        print(f"  p-value     = {p_value:.4e}")
 
     # Summary statistics
     mean_diff = np.mean(diffs)
