@@ -1,7 +1,7 @@
 # train_ssp.py
 import logging
 import torch
-from async_ssp import run_ssp_training, ConfigParameters
+from DASGD import run_ssp_training, ConfigParameters
 from datasets import create_full_data_loader
 from model import LinearNetModel
 from datasets import load_linear_data, create_linear_data_loader

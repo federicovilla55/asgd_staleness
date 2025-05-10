@@ -1,10 +1,8 @@
-from typing import Tuple
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
-from scipy.linalg import svd
-from torch import nn
+from typing import Tuple
 
 def create_linear_dataset(n_samples=100,
                           n_features=110,
@@ -42,7 +40,7 @@ def create_poly_varied_dataset(n_samples=100,
     y = X_pow.dot(w_true) + noise * rng.randn(n_samples)
     return X.astype(np.float32), y.astype(np.float32), degrees
 
-def split_data(X, y, val_size=0.01, test_size=0.2, random_state=None):
+def split_data(X, y, val_size=0.0, test_size=0.2, random_state=None):
     """
     Splits (X, y) into train/val/test.
       - train: (1 - val_size - test_size)
@@ -61,7 +59,7 @@ def load_linear_data(n_samples=100,
                      noise=0.0,
                      val_size=0.01,
                      test_size=0.2,
-                     random_state=42):
+                     random_state=None):
     """
     Generate a linear overparam dataset and split it.
     Returns: X_train, y_train, X_val, y_val, X_test, y_test
@@ -123,53 +121,3 @@ def create_poly_varied_data_loader(num_workers,
     ds = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
     loader = DataLoader(ds, batch_size=batch_size, shuffle=True)
     return loader, X_train.shape[1], degrees
-
-# For linear dataset 
-
-# full splits
-X_tr, y_tr, X_val, y_val, X_te, y_te = load_linear_data(
-    n_samples=201, n_features=210, noise=0.0,val_size=0.01,test_size=0.2, random_state=42 )
-
-# single-worker loader
-loader, dim = create_linear_data_loader(
-    num_workers=1, batch_size=32, worker_id=0,
-    n_samples=200, n_features=50, noise=0.0)
-
-
-#X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin = lin_splits
-X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin = X_tr, y_tr, X_val, y_val, X_te, y_te
-X_comb = np.vstack([X_tr_lin, X_val_lin])
-y_comb = np.concatenate([y_tr_lin, y_val_lin])
-n, d = X_comb.shape
-rng = np.random.RandomState(42)
-scale = 5   # avoids huge outliers
-# Amount of initializations
-init_ws = rng.uniform(-scale, scale, size=(1, d))
-np.save('linear_init_weights.npy', init_ws)
-
-# 3) Compute 95% of max stable step size η₉₅
-_, S_comb, _ = svd(X_comb, full_matrices=False)
-eta_max = 2.0 / (S_comb[0]**2)
-eta_95  = 0.95 * eta_max
-def create_full_data_loader(num_workers: int,
-                            batch_size:   int,
-                            worker_id:    int
-                           ) -> Tuple[DataLoader, int]:
-    """
-    Gives *every* worker the same full train+val set (X_comb, y_comb),
-    but shuffle=True so each draws random mini‑batches independently.
-    """
-    # X_comb, y_comb come from your earlier split:
-    #   X_comb = np.vstack([X_tr, X_val])
-    #   y_comb = np.concatenate([y_tr, y_val])
-    ds     = TensorDataset(
-                torch.from_numpy(X_comb).float(),
-                torch.from_numpy(y_comb).float()
-             )
-    loader = DataLoader(
-                ds,
-                batch_size=batch_size,
-                shuffle=True,
-                drop_last=False
-             )
-    return loader, X_comb.shape[1]

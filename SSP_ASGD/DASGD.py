@@ -43,7 +43,7 @@ class ConfigParameters:
     :param log_level: Logging verbosity level.
     :type log_level: int
     """
-    num_workers: int = 4
+    num_workers: int = 10
     staleness: int = 2
     lr: float  = 0.01
     local_steps: int = 500 
@@ -69,23 +69,34 @@ class ParameterServer:
         self.param = param
         self.theta = [p.detach().share_memory_() for p in model.parameters()]
         self._current_ver = mp.Value("i", 0)
+        self.prev_theta = [p.clone().detach() for p in self.theta]
 
     def pull(self):
         return [p.clone() for p in self.theta], self._current_ver.value
 
     def push(self, w_version: int, grads: list[torch.Tensor]) -> ParameterServerStatus:
         """
-        Apply the gradient as soon as it reaches the server *iff*
-        it is not older than `staleness` steps behind the current model.
-        Return True if the update was used, False otherwise.
+        Apply the gradient as soon as it reaches the server 
         """
-        # if gradient is too stale do not consider it
-        if w_version < self._current_ver.value - self.param.staleness:
-            return ParameterServerStatus.REJECTED
 
-        # SGD update
-        for p, g in zip(self.theta, grads):
-            p.sub_(self.param.lr * g.to(p.device))
+        tau = (self._current_ver.value - w_version)
+        k = self.param.num_workers
+
+        # Store current theta before updating
+        for i, p in enumerate(self.theta):
+            self.prev_theta[i].data.copy_(p.data)
+
+        # ASGD update with dynamic staleness (DASGD) 
+        # (see : https://doi.org/10.1016/j.ins.2024.121220)
+        for i, (p, g) in enumerate(zip(self.theta, grads)):
+
+            delta_W = p - self.prev_theta[i]
+            denom = (tau + k)
+
+            dynamic_bias = (-tau / denom) * delta_W
+            dynamic_scale = (k / denom)
+
+            p.sub_(dynamic_bias + dynamic_scale * self.param.lr * g.to(p.device))
 
         self._current_ver.value += 1
         return ParameterServerStatus.ACCEPTED
