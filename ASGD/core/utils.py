@@ -12,43 +12,6 @@ def set_seed(seed: int):
     random.seed(seed)
     np.random.seed(seed)
 
-def sgd_training(X_train, y_train, num_epochs = 10000, criterion = nn.MSELoss(), batch_size = 32, lr = 0.01, tol=1e-8):
-
-    # Create a linear model with dimention equal to the number of features
-    # in the dataset
-    model   = LinearNetModel(X_train.shape[1])
-
-    # Train the model using standard SGD
-    loader  = torch.utils.data.DataLoader(
-        torch.utils.data.TensorDataset(
-           torch.from_numpy(X_train), torch.from_numpy(y_train)
-        ),
-        batch_size=batch_size, shuffle=True
-    )
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
-
-    for epoch in range(num_epochs):
-        total_epoch_loss = 0.0
-        num_batches = 0
-
-        # Iterate over the batches of training data
-        for Xb, yb in loader:
-            optimizer.zero_grad() # Reset the gradients
-            out  = model(Xb) # Forward pass
-            loss = criterion(out, yb.float()) # Compute the loss
-            loss.backward() # Backward pass
-            optimizer.step() # Update the model parameters
-            total_epoch_loss += loss.item() # Accumulate the loss
-            num_batches += 1
-        
-        avg_loss = total_epoch_loss / num_batches
-        # Early stopping
-        if avg_loss < tol:
-            print(f"Stopping early at epoch {epoch} with avg loss {avg_loss:.6f} < tol={tol}")
-            break
-
-    return model
-
 def build_model(theta: list[torch.Tensor], model, input_dim: int) -> nn.Module:
     """
     Build a model instance from the provided parameters.

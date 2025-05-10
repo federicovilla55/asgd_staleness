@@ -168,12 +168,12 @@ def main():
 
             # Run the SSP training and measure the time taken
             start = time.perf_counter()
-            asgd_params, dim, stats = run_training(dataset_builder, model, params_ssp, ParameterServer, worker)
+            asgd_params, dim, stats = run_training(dataset_builder, model, params_ssp, ParameterServerASAP, worker)
             end = time.perf_counter()
             asgd_time = end - start
             ASGD_stats.append(stats)
 
-            '''
+            #'''
             print(f"{'Worker':>6s}  {'Mean':>8s}  {'Median':>8s}  {'Std':>8s}  {'%Over':>8s}")
             print("-" * 45) 
 
@@ -192,7 +192,7 @@ def main():
             print(f"  Median       = {c['median']:.4f}")
             print(f"  Std          = {c['std']:.4f}")
             print(f"  % Over Bound = {c['pct_over_bound']:.2f}%")
-            '''
+            #'''
 
             # Evaluate the trained model on the test set
             asgd_model = build_model(asgd_params, model, dim)
