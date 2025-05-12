@@ -17,6 +17,8 @@ from scipy.stats import ttest_rel
 import os
 
 from .. import *
+#from ASGD import *
+
 
 # Checkpoint directory
 CHECKPOINT_DIR = pathlib.Path(__file__).with_suffix("").with_name("ckpt") / "ASAP_SGD"
@@ -254,7 +256,7 @@ def main():
     print(f"Std of difference: {std_diff:.4e}")
 
     # Plot histogram of differences
-    '''plt.figure()
+    plt.figure()
     plt.hist(diffs, bins=20, edgecolor='black')
     plt.axvline(mean_diff, color='red', linestyle='dashed', linewidth=1, label=f"Mean: {mean_diff:.2e}")
     plt.axvline(median_diff, color='blue', linestyle='dotted', linewidth=1, label=f"Median: {median_diff:.2e}")
@@ -263,7 +265,7 @@ def main():
     plt.title("Distribution of Loss Differences (SGD vs. ASGD)")
     plt.legend()
     plt.tight_layout()
-    plt.show()'''
+    plt.show()
 
 if __name__ == "__main__":
     main()

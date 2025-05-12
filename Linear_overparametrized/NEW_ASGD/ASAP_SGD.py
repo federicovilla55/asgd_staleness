@@ -626,8 +626,8 @@ def main():
     true_weight_properties_file = os.path.join(script_dir, true_weight_properties_f)
 
     # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
-    RUNS_REGULAR_SGD = 10      # Set always min to 1 for both methods (if want to retrieve/use the stored values)
-    RUNS_ASGD = 3
+    RUNS_REGULAR_SGD = 20      # Set always min to 1 for both methods (if want to retrieve/use the stored values)
+    RUNS_ASGD = 20
 
     if RUNS_REGULAR_SGD > 0:
         #RETRIEVE LOSSES
@@ -761,10 +761,11 @@ def main():
             logging.info("Starting fresh on staleness distr")
         
         # INIT/RETRIEVE WEIGHT METRICS/PROPERTIES
+        
         if os.path.exists(ASGD_weight_properties_file):
             with open(ASGD_weight_properties_file, 'rb') as f:
                 ASGD_weight_properties = pickle.load(f)
-            logging.info(f"Resuming staleness distr: {len(ASGD_weight_properties)}/{len(seeds)} done")
+            logging.info(f"Resuming weight properties: {len(ASGD_weight_properties)}/{len(seeds)} done")
         else:
             if len(ASGD_losses) == 0:
                 ASGD_weight_properties  = [] 
