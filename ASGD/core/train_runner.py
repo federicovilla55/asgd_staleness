@@ -6,22 +6,25 @@ from typing import Tuple, Type
 import torch
 import torch.nn as nn
 
-from .mp_tools import PSManager
 from .worker import worker
 from .parameter_server import ParameterServer
-from .schedulers import LrScaler, ASAPScaler
 from ..config import ConfigParameters
 from ..data.base import AbstractDataBuilder
-from ..models.base import ModelFactory
 from typing import Callable
 from multiprocessing.managers import BaseManager
 
-def run_training(
+
+# 1) Tell the manager how to create a ParameterServer proxy
+
+class PSManager(BaseManager): pass
+PSManager.register('ParameterServer', ParameterServer)
+PSManager.register('get_staleness_stats', ParameterServer.get_staleness_stats)
+PSManager.register('get_hist', ParameterServer.get_hist)
+
+def run_ssp_training(
     dataset_builder: Callable[[int, int,int], Tuple[torch.utils.data.DataLoader,int]],
     model: Callable[[int], nn.Module],
     param: ConfigParameters = ConfigParameters(),
-    parameter_server: Callable = ParameterServer,
-    asgd_worker: Callable = worker,
 ) -> list[torch.Tensor]:
     """
     Helper function to run the Stale Synchronous Parallel training with the provided dataset builder, model and configuration parameters.
@@ -40,10 +43,6 @@ def run_training(
     # Initialize the model and parameter server
     init_model = model(input_dim)
     # Start a custom manager server
-    class PSManager(BaseManager): pass
-    PSManager.register('ParameterServer', parameter_server)
-    PSManager.register('get_staleness_stats', parameter_server.get_staleness_stats)
-
     manager = PSManager()
     manager.start()
     ps_proxy = manager.ParameterServer(init_model, param)
@@ -55,7 +54,7 @@ def run_training(
     start_evt = ctx.Event() # Create event so that all workers start at the same time
     for id in range(param.num_workers):
         p = ctx.Process(
-            target=asgd_worker, # Worker function
+            target=worker, # Worker function
             args=(id, ps_proxy, model, input_dim, dataset_builder, param, start_evt), # Arguments for the worker function
             daemon=False, # Daemon processes are not used as they are killed when the main process exits
         )
@@ -76,4 +75,7 @@ def run_training(
 
     # Return the staleness stats for the workers
     stats    = ps_proxy.get_staleness_stats()
-    return theta, input_dim, stats
+
+    # Return a list containing the staleness counts
+    staleness_distr = ps_proxy.get_hist()
+    return theta, input_dim, stats, staleness_distr

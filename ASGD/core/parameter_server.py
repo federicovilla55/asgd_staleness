@@ -5,7 +5,6 @@ import numpy as np
 import torch
 from enum import Enum, auto
 from .data_types import ParameterServerStatus
-from .schedulers import LrScaler, ASAPScaler, PushResult
 
 import collections
 from typing import Any, Dict, List, Tuple
@@ -30,6 +29,7 @@ class ParameterServer:
         self._lock = threading.Lock()
         # one list of staleness values per worker for tracking staleness stats
         self._staleness = defaultdict(list)
+        # One list of the global staleness count
         self.hist = [0] * (param.staleness +1) # We assume max staleness is 50, so easier data structure for F computation possible
         self.total = 0
 
@@ -43,7 +43,7 @@ class ParameterServer:
             # record staleness of each worker regardless of accept/reject
             self._staleness[wid].append(st)
 
-            if st >= self.param.staleness:
+            if st >= self.param.staleness: # Reject any staleness larger than 50 so that it fits in the list (this will normally not happen)
                 return ParameterServerStatus.REJECTED
             
             self.hist[st] += 1
@@ -65,6 +65,11 @@ class ParameterServer:
     def get_version(self):
         with self._lock:
             return self._current_ver.value
+        
+    def get_hist(self) -> list[int]:
+        """Return the raw counts of staleness occurrences for this run."""
+        # note: self.hist is of length staleness+1
+        return list(self.hist)
         
     def get_staleness_stats(self):
         """
