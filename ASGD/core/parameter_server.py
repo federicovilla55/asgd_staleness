@@ -22,16 +22,19 @@ class ParameterServer:
     :type model: nn.Module
     :param param: Configuration parameters
     :type param: ConfigParameters
+    :type learning_rule: str
     """
-    def __init__(self, model, param):
+    def __init__(self, model, param, learning_rule='DASGD'):
         self.param = param
         self.theta = [p.detach().share_memory_() for p in model.parameters()]
         self._current_ver = mp.Value("i", 0)
+        self.prev_theta = [p.clone().detach() for p in self.theta]
         self._lock = threading.Lock()
         # one list of staleness values per worker for tracking staleness stats
         self._staleness = defaultdict(list)
         self.hist = [0] * (param.staleness +1) # We assume max staleness is 50, so easier data structure for F computation possible
         self.total = 0
+        self.learning_rule = learning_rule
 
     def pull(self):
         return [p.clone() for p in self.theta], self._current_ver.value
@@ -43,21 +46,43 @@ class ParameterServer:
             # record staleness of each worker regardless of accept/reject
             self._staleness[wid].append(st)
 
-            if st >= self.param.staleness:
-                return ParameterServerStatus.REJECTED
-            
-            self.hist[st] += 1
-            self.total += 1
+            if self.learning_rule == "DASGD":
+                tau = st
+                k = self.param.num_workers
 
-            # empirical CDF of staleness up to (and including) this value => ASAP SGD implementation
-            cum = sum(self.hist[: st+1])
-            F = cum / self.total
-            CA = 1 + self.param.Amplitude * (1 - 2 * F)
-            scaled_lr = CA * self.param.lr
+                # Store current theta before updating
+                for i, p in enumerate(self.theta):
+                    self.prev_theta[i].data.copy_(p.data)
 
-            # SGD update
-            for p, g in zip(self.theta, grads):
-                p.sub_(scaled_lr * g.to(p.device))
+                # ASGD update with dynamic staleness (DASGD) 
+                # (see : https://doi.org/10.1016/j.ins.2024.121220)
+                for i, (p, g) in enumerate(zip(self.theta, grads)):
+
+                    delta_W = p - self.prev_theta[i]
+                    denom = (tau + k)
+
+                    dynamic_bias = (-tau / denom) * delta_W
+                    dynamic_scale = (k / denom)
+
+                    p.sub_(dynamic_bias + dynamic_scale * self.param.lr * g.to(p.device))
+
+            else:
+
+                if st >= self.param.staleness:
+                    return ParameterServerStatus.REJECTED
+                
+                self.hist[st] += 1
+                self.total += 1
+
+                # empirical CDF of staleness up to (and including) this value => ASAP SGD implementation
+                cum = sum(self.hist[: st+1])
+                F = cum / self.total
+                CA = 1 + self.param.Amplitude * (1 - 2 * F)
+                scaled_lr = CA * self.param.lr
+
+                # SGD update
+                for p, g in zip(self.theta, grads):
+                    p.sub_(scaled_lr * g.to(p.device))
 
         self._current_ver.value += 1
         return ParameterServerStatus.ACCEPTED

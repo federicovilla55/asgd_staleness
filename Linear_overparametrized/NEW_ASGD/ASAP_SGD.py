@@ -201,10 +201,12 @@ class ParameterServer:
     :type model: nn.Module
     :param param: Configuration parameters
     :type param: ConfigParameters
+    :type learning_rule: str
     """
-    def __init__(self, model, param):
+    def __init__(self, model, param, learning_rule='DASGD'):
         self.param = param
         self.theta = [p.detach().share_memory_() for p in model.parameters()]
+        self.prev_theta = [p.clone().detach() for p in self.theta]
         self._current_ver = mp.Value("i", 0)
         self._lock = threading.Lock()
         # one list of staleness values per worker for tracking staleness stats
@@ -212,6 +214,7 @@ class ParameterServer:
         # One list of the global staleness count
         self.hist = [0] * (param.staleness +1) # We assume max staleness is 50, so easier data structure for F computation possible
         self.total = 0
+        self.learning_rule = learning_rule
 
     def pull(self):
         return [p.clone() for p in self.theta], self._current_ver.value
@@ -223,21 +226,44 @@ class ParameterServer:
             # record staleness of each worker regardless of accept/reject
             self._staleness[wid].append(st)
 
-            if st >= self.param.staleness: # Reject any staleness larger than 50 so that it fits in the list (this will normally not happen)
-                return ParameterServerStatus.REJECTED
+            if self.learning_rule == "DASGD":
+                tau = st
+                k = self.param.num_workers
+
+                # Store current theta before updating
+                for i, p in enumerate(self.theta):
+                    self.prev_theta[i].data.copy_(p.data)
+                
+                self.hist[st] += 1
+                self.total += 1
+
+                # ASGD update with dynamic staleness (DASGD) 
+                # (see : https://doi.org/10.1016/j.ins.2024.121220)
+                for i, (p, g) in enumerate(zip(self.theta, grads)):
+
+                    delta_W = p - self.prev_theta[i]
+                    denom = (tau + k)
+
+                    dynamic_bias = (-tau / denom) * delta_W
+                    dynamic_scale = (k / denom)
+
+                    p.sub_(dynamic_bias + dynamic_scale * self.param.lr * g.to(p.device))
+            else:
+                if st >= self.param.staleness: # Reject any staleness larger than 50 so that it fits in the list (this will normally not happen)
+                    return ParameterServerStatus.REJECTED
             
-            self.hist[st] += 1
-            self.total += 1
+                self.hist[st] += 1
+                self.total += 1
 
-            # empirical CDF of staleness up to (and including) this value => ASAP SGD implementation
-            cum = sum(self.hist[: st+1])
-            F = cum / self.total
-            CA = 1 + self.param.Amplitude * (1 - 2 * F)
-            scaled_lr = CA * self.param.lr
+                # empirical CDF of staleness up to (and including) this value => ASAP SGD implementation
+                cum = sum(self.hist[: st+1])
+                F = cum / self.total
+                CA = 1 + self.param.Amplitude * (1 - 2 * F)
+                scaled_lr = CA * self.param.lr
 
-            # SGD update
-            for p, g in zip(self.theta, grads):
-                p.sub_(scaled_lr * g.to(p.device))
+                # SGD update
+                for p, g in zip(self.theta, grads):
+                    p.sub_(scaled_lr * g.to(p.device))
 
         self._current_ver.value += 1
         return ParameterServerStatus.ACCEPTED
@@ -388,6 +414,7 @@ def run_ssp_training(
     dataset_builder: Callable[[int, int,int], Tuple[torch.utils.data.DataLoader,int]],
     model: Callable[[int], nn.Module],
     param: ConfigParameters = ConfigParameters(),
+    learning_rule: str = "DASGD",
 ) -> list[torch.Tensor]:
     """
     Helper function to run the Stale Synchronous Parallel training with the provided dataset builder, model and configuration parameters.
@@ -400,6 +427,7 @@ def run_ssp_training(
     :rtype: list[torch.Tensor]
     """
 
+    print(f"Running {learning_rule}")
     # Retrieve input dimension from dataset builder with provided batch size and number of workers
     _, input_dim = dataset_builder(param.num_workers, param.batch_size, 0)
 
@@ -408,7 +436,7 @@ def run_ssp_training(
     # Start a custom manager server
     manager = PSManager()
     manager.start()
-    ps_proxy = manager.ParameterServer(init_model, param)
+    ps_proxy = manager.ParameterServer(init_model, param, learning_rule)
 
     # Create a process for each worker
     # Use either "fork" or "spawn" based on your OS ("fork" on Linux)

@@ -22,6 +22,7 @@ def run_training(
     param: ConfigParameters = ConfigParameters(),
     parameter_server: Callable = ParameterServer,
     asgd_worker: Callable = worker,
+    learning_rule: str = "DASGD",
 ) -> list[torch.Tensor]:
     """
     Helper function to run the Stale Synchronous Parallel training with the provided dataset builder, model and configuration parameters.
@@ -46,7 +47,7 @@ def run_training(
 
     manager = PSManager()
     manager.start()
-    ps_proxy = manager.ParameterServer(init_model, param)
+    ps_proxy = manager.ParameterServer(init_model, param, learning_rule)
 
     # Create a process for each worker
     # Use either "fork" or "spawn" based on your OS ("fork" on Linux)
