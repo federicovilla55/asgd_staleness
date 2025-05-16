@@ -179,11 +179,11 @@ class ConfigParameters:
     :param log_level: Logging verbosity level.
     :type log_level: int
     """
-    num_workers: int = 4
-    staleness: int = 2
+    num_workers: int = 5
+    staleness: int = 50
     lr: float  = 0.01
     local_steps: int = 1 
-    batch_size: int = 32
+    batch_size: int = 10
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
     log_level: int = logging.INFO
     tol: float = 1e-8
@@ -215,17 +215,27 @@ class ParameterServer:
         self.hist = [0] * (param.staleness +1) # We assume max staleness is 50, so easier data structure for F computation possible
         self.total = 0
         self.learning_rule = learning_rule
+        self.count_time_push = 0
+        self.count_time_pull = 0
 
     def pull(self):
-        return [p.clone() for p in self.theta], self._current_ver.value
+
+        server_start_pull = time.perf_counter()
+        result = [p.clone() for p in self.theta], self._current_ver.value
+        server_end_pull = time.perf_counter()
+        self.count_time_pull += (server_end_pull-server_start_pull)
+
+        return result
 
     def push(self, wid, w_version: int, grads: list[torch.Tensor]) -> ParameterServerStatus:
         with self._lock:
+            server_start_push = time.perf_counter()
             curr = self._current_ver.value
             st = curr - w_version
             # record staleness of each worker regardless of accept/reject
             self._staleness[wid].append(st)
 
+            # TODO : implement other methods
             if self.learning_rule == "DASGD":
                 tau = st
                 k = self.param.num_workers
@@ -265,8 +275,14 @@ class ParameterServer:
                 for p, g in zip(self.theta, grads):
                     p.sub_(scaled_lr * g.to(p.device))
 
-        self._current_ver.value += 1
+            server_end_push = time.perf_counter()    
+            self.count_time_push += (server_end_push-server_start_push)
+            self._current_ver.value += 1
+
         return ParameterServerStatus.ACCEPTED
+
+    def get_time_push(self):
+        return (self.count_time_push, self.count_time_pull)
 
     def get_version(self):
         with self._lock:
@@ -409,6 +425,7 @@ class PSManager(BaseManager): pass
 PSManager.register('ParameterServer', ParameterServer)
 PSManager.register('get_staleness_stats', ParameterServer.get_staleness_stats)
 PSManager.register('get_hist', ParameterServer.get_hist)
+PSManager.register('get_time_push', ParameterServer.get_time_push)
 
 def run_ssp_training(
     dataset_builder: Callable[[int, int,int], Tuple[torch.utils.data.DataLoader,int]],
@@ -461,6 +478,8 @@ def run_ssp_training(
 
     theta, _ = ps_proxy.pull() # Get the final parameter theta from the server
 
+    time_push = ps_proxy.get_time_push()
+    print(f"Final time for all (pushes, pulls) = {time_push}")
     #print("Final Version: ", ps.get_version())
     #logging.info("SSP training finished")
 
@@ -554,7 +573,7 @@ class LinearNetModel(nn.Module):
         # Linear layer returns (batch_size, 1), so squeeze to (batch_size,)
         return self.linear(x).squeeze(-1)
     
-def sgd_training(X_train, y_train, num_epochs = 10000, criterion = nn.MSELoss(), batch_size = 32, lr = 0.01, tol=1e-8):
+def sgd_training(X_train, y_train, num_epochs = 10000, criterion = nn.MSELoss(), batch_size = 10, lr = 0.01, tol=1e-8):
 
     # Create a linear model with dimention equal to the number of features
     # in the dataset
@@ -568,7 +587,7 @@ def sgd_training(X_train, y_train, num_epochs = 10000, criterion = nn.MSELoss(),
         batch_size=batch_size, shuffle=True
     )
     optimizer = torch.optim.SGD(model.parameters(), lr=lr)
-
+    count_updates = 0
     for epoch in range(num_epochs):
         total_epoch_loss = 0.0
         num_batches = 0
@@ -582,10 +601,12 @@ def sgd_training(X_train, y_train, num_epochs = 10000, criterion = nn.MSELoss(),
             optimizer.step() # Update the model parameters
             total_epoch_loss += loss.item() # Accumulate the loss
             num_batches += 1
+            count_updates += 1
         
         avg_loss = total_epoch_loss / num_batches
         # Early stopping
         if avg_loss < tol:
+            print(f"SGD used {count_updates} updates")
             print(f"Stopping early at epoch {epoch} with avg loss {avg_loss:.6f} < tol={tol}")
             break
 
@@ -654,8 +675,9 @@ def main():
     true_weight_properties_file = os.path.join(script_dir, true_weight_properties_f)
 
     # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
-    RUNS_REGULAR_SGD = 20      # Set always min to 1 for both methods (if want to retrieve/use the stored values)
-    RUNS_ASGD = 20
+    # TODO : change to 20 runs !
+    RUNS_REGULAR_SGD = 50      # Set always min to 1 for both methods (if want to retrieve/use the stored values)
+    RUNS_ASGD = 50
 
     if RUNS_REGULAR_SGD > 0:
         #RETRIEVE LOSSES
@@ -829,11 +851,11 @@ def main():
 
             # Set up the configuration for the SSP training
             params_ssp = ConfigParameters(
-                num_workers = 10,
+                num_workers = 5,
                 staleness = 50, 
                 lr = eta_95/2,                          # HERE DIVIDED BY 2 SO THAT MAX LR = (1+A)*LR = ETA_95 => Otherwise very high test loss and bad convergence !!
                 local_steps = 10000,
-                batch_size = 32,
+                batch_size = 10,
                 device = "cuda" if torch.cuda.is_available() else "cpu",
                 log_level = logging.DEBUG,
                 tol = 1e-8,                             # The tol for workers is currently set at tol = 1e-8
