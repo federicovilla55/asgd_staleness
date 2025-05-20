@@ -1,8 +1,8 @@
 """
-Test DASGD
+Test ASAP SGD
 
 From the base repository directory:  
-`python -m ASGD.experiments.dasgd`
+`python -m ASGD.experiments.asap_sgd`
 """
 from __future__ import annotations
 import time, pathlib, pickle, random, sys
@@ -27,8 +27,8 @@ CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Checkpoint files
 SGD_DIR   = CHECKPOINT_DIR
-DASGD_DIR  = CHECKPOINT_DIR / "DASGD"
-DASGD_DIR.mkdir(parents=True, exist_ok=True)
+ASAP_SGD_DIR  = CHECKPOINT_DIR / "ASAP_SGD"
+ASAP_SGD_DIR.mkdir(parents=True, exist_ok=True)
 
 def main():
     # Set up logging
@@ -50,11 +50,11 @@ def main():
 
     # For each checkpoint file
     sgd_losses_file = os.path.join(SGD_DIR, sgd_losses_f)
-    asgd_losses_file = os.path.join(DASGD_DIR, asgd_losses_f)
-    asgd_stats_file  = os.path.join(DASGD_DIR, asgd_stats_f)
-    staleness_distr_file = os.path.join(DASGD_DIR, staleness_distr_f)
+    asgd_losses_file = os.path.join(ASAP_SGD_DIR, asgd_losses_f)
+    asgd_stats_file  = os.path.join(ASAP_SGD_DIR, asgd_stats_f)
+    staleness_distr_file = os.path.join(ASAP_SGD_DIR, staleness_distr_f)
     SGD_weight_properties_file = os.path.join(SGD_DIR, SGD_weight_properties_f)
-    ASGD_weight_properties_file = os.path.join(DASGD_DIR, ASGD_weight_properties_f)
+    ASGD_weight_properties_file = os.path.join(ASAP_SGD_DIR, ASGD_weight_properties_f)
     true_weight_properties_file = os.path.join(SGD_DIR, true_weight_properties_f)
 
     # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
@@ -247,7 +247,7 @@ def main():
 
             # Run the SSP training and measure the time taken
             start = time.perf_counter()
-            asgd_params, dim, stats, staleness_distr = run_training(dataset_builder, model, params_ssp, parameter_server=ParameterServerDASGD)
+            asgd_params, dim, stats, staleness_distr = run_training(dataset_builder, model, params_ssp, parameter_server=ParameterServerASAP_SGD)
             end = time.perf_counter()
             asgd_time = end - start
             ASGD_stats.append(stats)
