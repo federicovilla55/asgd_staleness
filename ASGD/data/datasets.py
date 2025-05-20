@@ -17,7 +17,7 @@ def create_linear_dataset(n_samples=100,
     X = rng.uniform(-3, 3, size=(n_samples, n_features))
     w_true = rng.randn(n_features)
     y = X.dot(w_true) + noise * rng.randn(n_samples)
-    return X.astype(np.float32), y.astype(np.float32)
+    return X.astype(np.float32), y.astype(np.float32), w_true.astype(np.float32)
 
 def create_poly_varied_dataset(n_samples=100,
                                n_features=110,
@@ -64,8 +64,9 @@ def load_linear_data(n_samples=100,
     Generate a linear overparam dataset and split it.
     Returns: X_train, y_train, X_val, y_val, X_test, y_test
     """
-    X, y = create_linear_dataset(n_samples, n_features, noise, random_state)
-    return split_data(X, y, val_size, test_size, random_state)
+    X, y, w = create_linear_dataset(n_samples, n_features, noise, random_state)
+    X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin = split_data(X, y, val_size, test_size, random_state)
+    return X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin, w
 
 def load_poly_varied_data(n_samples=100,
                           n_features=110,

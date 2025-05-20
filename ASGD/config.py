@@ -24,11 +24,11 @@ class ConfigParameters:
     :param log_level: Logging verbosity level.
     :type log_level: int
     """
-    num_workers: int = 4
-    staleness: int = 2
+    num_workers: int = 5
+    staleness: int = 50
     lr: float  = 0.01
     local_steps: int = 1 
-    batch_size: int = 32
+    batch_size: int = 10
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
     log_level: int = logging.INFO
     tol: float = 1e-8

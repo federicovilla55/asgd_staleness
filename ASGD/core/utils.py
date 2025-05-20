@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from ..models import LinearNetModel
+from scipy.stats import kurtosis
 
 def exp_delay(num_workers: int, scale: float = 1e-4) -> None:
     mean_stale = num_workers - 1
@@ -12,8 +13,7 @@ def set_seed(seed: int):
     random.seed(seed)
     np.random.seed(seed)
 
-def sgd_training(X_train, y_train, num_epochs = 10000, criterion = nn.MSELoss(), batch_size = 32, lr = 0.01, tol=1e-8):
-
+def sgd_training(X_train, y_train, num_epochs = 10000, criterion = nn.MSELoss(), batch_size = 10, lr = 0.01, tol=1e-8):
     # Create a linear model with dimention equal to the number of features
     # in the dataset
     model   = LinearNetModel(X_train.shape[1])
@@ -26,6 +26,8 @@ def sgd_training(X_train, y_train, num_epochs = 10000, criterion = nn.MSELoss(),
         batch_size=batch_size, shuffle=True
     )
     optimizer = torch.optim.SGD(model.parameters(), lr=lr)
+    count_updates = 0
+
 
     for epoch in range(num_epochs):
         total_epoch_loss = 0.0
@@ -40,10 +42,12 @@ def sgd_training(X_train, y_train, num_epochs = 10000, criterion = nn.MSELoss(),
             optimizer.step() # Update the model parameters
             total_epoch_loss += loss.item() # Accumulate the loss
             num_batches += 1
+            count_updates += 1
         
         avg_loss = total_epoch_loss / num_batches
         # Early stopping
         if avg_loss < tol:
+            print(f"SGD used {count_updates} updates")
             print(f"Stopping early at epoch {epoch} with avg loss {avg_loss:.6f} < tol={tol}")
             break
 
@@ -102,3 +106,23 @@ def evaluate_model(name:str, model: nn.Module, X_eval: np.ndarray, y_eval: np.nd
         # Compute MSE
         mse = criterion(y_pred, y_tensor).item()
     return mse
+
+# L₂ norm tells you how “big” your solution is (capacity control).
+def l2_norm(w: np.ndarray) -> float:
+    return float(np.linalg.norm(w, 2))
+
+def l1_norm(w: np.ndarray) -> float:
+    return float(np.linalg.norm(w.reshape(-1), 1))
+#L₁/L₂ ratio tells you how many “effective” nonzeros you have (sparsity).
+def sparsity_ratio(w: np.ndarray) -> float:
+    """
+    L1/L2 ratio: higher → more diffuse weights, lower → more concentrated.
+    """
+    l1 = l1_norm(w)
+    l2 = l2_norm(w)
+    return l1 / (l2 + 1e-12)
+
+#Kurtosis tells you whether that magnitude is due to a few standout weights or a more uniform spread.
+def weight_kurtosis(w):
+    # fisher=False → normal distribution has kurtosis = 3
+    return kurtosis(w, fisher=False)

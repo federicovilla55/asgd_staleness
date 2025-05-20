@@ -6,13 +6,10 @@ from typing import Tuple, Type
 import torch
 import torch.nn as nn
 
-from .mp_tools import PSManager
 from .worker import worker
 from .parameter_server import ParameterServer
-from .schedulers import LrScaler, ASAPScaler
 from ..config import ConfigParameters
 from ..data.base import AbstractDataBuilder
-from ..models.base import ModelFactory
 from typing import Callable
 from multiprocessing.managers import BaseManager
 
@@ -22,7 +19,6 @@ def run_training(
     param: ConfigParameters = ConfigParameters(),
     parameter_server: Callable = ParameterServer,
     asgd_worker: Callable = worker,
-    learning_rule: str = "DASGD",
 ) -> list[torch.Tensor]:
     """
     Helper function to run the Stale Synchronous Parallel training with the provided dataset builder, model and configuration parameters.
@@ -44,10 +40,14 @@ def run_training(
     class PSManager(BaseManager): pass
     PSManager.register('ParameterServer', parameter_server)
     PSManager.register('get_staleness_stats', parameter_server.get_staleness_stats)
+    PSManager.register('get_hist', ParameterServer.get_hist)
+    PSManager.register('get_time_push', ParameterServer.get_time_push)
+
+
 
     manager = PSManager()
     manager.start()
-    ps_proxy = manager.ParameterServer(init_model, param, learning_rule)
+    ps_proxy = manager.ParameterServer(init_model, param)
 
     # Create a process for each worker
     # Use either "fork" or "spawn" based on your OS ("fork" on Linux)
@@ -72,9 +72,15 @@ def run_training(
 
     theta, _ = ps_proxy.pull() # Get the final parameter theta from the server
 
+    time_push = ps_proxy.get_time_push()
+    print(f"Final time for all (pushes, pulls) = {time_push}")
+
     #print("Final Version: ", ps.get_version())
     #logging.info("SSP training finished")
 
     # Return the staleness stats for the workers
     stats    = ps_proxy.get_staleness_stats()
-    return theta, input_dim, stats
+
+    # Return a list containing the staleness counts
+    staleness_distr = ps_proxy.get_hist()
+    return theta, input_dim, stats, staleness_distr
