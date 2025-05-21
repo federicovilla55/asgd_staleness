@@ -33,3 +33,4 @@ class ConfigParameters:
     log_level: int = logging.INFO
     tol: float = 1e-8
     Amplitude: float = 1
+    

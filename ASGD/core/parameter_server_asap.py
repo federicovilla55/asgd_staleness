@@ -5,6 +5,10 @@ import time
 import torch
 
 class ParameterServerASAP_SGD(ParameterServer):
+    """
+    "Instance-based Adaptiveness to Staleness in Asynchronous SGD"
+    (https://proceedings.mlr.press/v162/backstrom22a/backstrom22a.pdf).
+    """
     def __init__(self, model: nn.Module, param: ConfigParameters):
         """
         Initialize the Parameter Server for ASAP-SGD.

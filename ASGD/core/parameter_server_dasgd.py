@@ -5,6 +5,10 @@ import time
 import torch
 
 class ParameterServerDASGD(ParameterServer):
+    """
+    "Asynchronous SGD with stale gradient dynamic adjustment for deep learning training" 
+    (https://www.sciencedirect.com/science/article/pii/S0020025524011344?via%3Dihub)
+    """
     def __init__(self, model: nn.Module, param: ConfigParameters):
         """
         Initialize the Parameter Server for ASAP-SGD.

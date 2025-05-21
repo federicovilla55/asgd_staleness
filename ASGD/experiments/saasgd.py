@@ -1,8 +1,10 @@
 """
-Test ASAP SGD
+Test SSASGD on linear regression with synthetic overparameterized data.
 
 From the base repository directory:  
-`python -m ASGD.experiments.asap_sgd`
+`python -m ASGD.experiments.saasgd`
+
+This tests the "Staleness-aware Asynchronous SGD for Distributed Deep Learning" (https://arxiv.org/pdf/1511.05950).
 """
 from __future__ import annotations
 import time, pathlib, pickle, random, sys
@@ -25,8 +27,8 @@ CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Checkpoint files
 SGD_DIR   = CHECKPOINT_DIR
-ASAP_SGD_DIR  = CHECKPOINT_DIR / "ASAP_SGD"
-ASAP_SGD_DIR.mkdir(parents=True, exist_ok=True)
+SAASGD_DIR  = CHECKPOINT_DIR / "SAASGD"
+SAASGD_DIR.mkdir(parents=True, exist_ok=True)
 
 def main():
     # Set up logging
@@ -48,17 +50,17 @@ def main():
 
     # For each checkpoint file
     sgd_losses_file = os.path.join(SGD_DIR, sgd_losses_f)
-    asgd_losses_file = os.path.join(ASAP_SGD_DIR, asgd_losses_f)
-    asgd_stats_file  = os.path.join(ASAP_SGD_DIR, asgd_stats_f)
-    staleness_distr_file = os.path.join(ASAP_SGD_DIR, staleness_distr_f)
+    asgd_losses_file = os.path.join(SAASGD_DIR, asgd_losses_f)
+    asgd_stats_file  = os.path.join(SAASGD_DIR, asgd_stats_f)
+    staleness_distr_file = os.path.join(SAASGD_DIR, staleness_distr_f)
     SGD_weight_properties_file = os.path.join(SGD_DIR, SGD_weight_properties_f)
-    ASGD_weight_properties_file = os.path.join(ASAP_SGD_DIR, ASGD_weight_properties_f)
+    ASGD_weight_properties_file = os.path.join(SAASGD_DIR, ASGD_weight_properties_f)
     true_weight_properties_file = os.path.join(SGD_DIR, true_weight_properties_f)
 
     # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
     # TODO : change to 20 runs !
     RUNS_REGULAR_SGD = 50      # Set always min to 1 for both methods (if want to retrieve/use the stored values)
-    RUNS_ASGD = 50
+    RUNS_ASGD = 200
 
     if RUNS_REGULAR_SGD > 0:
         #RETRIEVE LOSSES
@@ -245,7 +247,7 @@ def main():
 
             # Run the SSP training and measure the time taken
             start = time.perf_counter()
-            asgd_params, dim, stats, staleness_distr = run_training(dataset_builder, model, params_ssp, parameter_server=ParameterServerASAP_SGD)
+            asgd_params, dim, stats, staleness_distr = run_training(dataset_builder, model, params_ssp, parameter_server=ParameterServerSAASGD)
             end = time.perf_counter()
             asgd_time = end - start
             ASGD_stats.append(stats)
