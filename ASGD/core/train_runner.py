@@ -17,10 +17,12 @@ from multiprocessing.managers import BaseManager
 class PSManager(BaseManager):
     pass
 
-PSManager.register(
-    "ParameterServer",
-    callable=ParameterServer,
-)
+# register a generic “factory” by name here, picklable because it's a top‐level function
+def _ps_factory(model, cfg):
+    # this will be monkey‐patched at runtime to point at the right class
+    raise RuntimeError("_ps_factory was not replaced!")
+
+PSManager.register("ParameterServer", callable=_ps_factory)
 PSManager.register("get_staleness_stats", ParameterServer.get_staleness_stats)
 PSManager.register("get_hist",              ParameterServer.get_hist)
 PSManager.register("get_time_push",         ParameterServer.get_time_push)
@@ -42,7 +44,9 @@ def run_training(
     :return: The final model parameters after training.
     :rtype: list[torch.Tensor]
     """
-
+     # — before starting the manager, swap out the factory function we registered —
+    PSManager.register("ParameterServer", callable=parameter_server)
+    
     # Retrieve input dimension from dataset builder with provided batch size and number of workers
     _, input_dim = dataset_builder(param.num_workers, param.batch_size, 0)
 
