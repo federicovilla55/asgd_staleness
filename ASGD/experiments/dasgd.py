@@ -234,15 +234,15 @@ def main():
 
             # Set up the configuration for the SSP training
             params_ssp = ConfigParameters(
-                num_workers = 5,
+                num_workers = 10,
                 staleness = 50, 
-                lr = eta_95/2,                          # HERE DIVIDED BY 2 SO THAT MAX LR = (1+A)*LR = ETA_95 => Otherwise very high test loss and bad convergence !!
+                lr = eta_95,                         # DEPENDING ON ALGO THIS HAS TO BE CHANGED !
                 local_steps = 10000,
                 batch_size = 10,
                 device = "cuda" if torch.cuda.is_available() else "cpu",
                 log_level = logging.DEBUG,
                 tol = 1e-8,                             # The tol for workers is currently set at tol = 1e-8
-                Amplitude = 1                           # The max amplitude deviation from the base stepsize
+                Amplitude = 1                           # The max amplitude IN ASAP
             )
 
             # Run the SSP training and measure the time taken

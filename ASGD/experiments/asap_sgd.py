@@ -16,19 +16,45 @@ from numpy.linalg import svd
 from scipy.stats import ttest_rel
 import os
 import scipy.stats as stats_mod
+import argparse
 
 from .. import *
 
-# Checkpoint directory
-CHECKPOINT_DIR = pathlib.Path(__file__).with_suffix("").with_name("ckpt")
-CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
-
-# Checkpoint files
-SGD_DIR   = CHECKPOINT_DIR
-ASAP_SGD_DIR  = CHECKPOINT_DIR / "ASAP_SGD"
-ASAP_SGD_DIR.mkdir(parents=True, exist_ok=True)
+# USER WILL HAVE TO CHOOSE THE AMOUNT OF OVERPARAMETRIZATION
+def parse_args():
+    p = argparse.ArgumentParser()
+    p.add_argument(
+        "--overparam",
+        choices=[110, 150, 200],
+        type=int,
+        required=True,
+        help="percent of features vs samples",
+    )
+    return p.parse_args()
 
 def main():
+    # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
+    # TODO : change to 20 runs !
+    RUNS_REGULAR_SGD = 10      # Set always min to 1 for both methods (if want to retrieve/use the stored values)
+    RUNS_ASGD = 10
+
+    # USER WILL HAVE TO CHOOSE THE AMOUNT OF OVERPARAMETRIZATION
+    args = parse_args()
+
+    # every run uses n_samples=100
+    n_samples = 100
+    # compute features = level% of samples
+    n_features = int(n_samples * args.overparam / 100)
+
+    # base checkpoint tree
+    BASE_CKPT = pathlib.Path(__file__).parent / "ckpt"
+    # e.g. ckpt/overparam_150/SGD  and ckpt/overparam_150/ASAP_SGD
+    cfg_dir = BASE_CKPT / f"overparam_{args.overparam}"
+    SGD_DIR   = cfg_dir / "SGD"
+    ASAP_DIR  = cfg_dir / "ASAP_SGD"
+    for d in (SGD_DIR, ASAP_DIR):
+        d.mkdir(parents=True, exist_ok=True)
+
     # Set up logging
     logging.basicConfig(level=logging.INFO)
 
@@ -39,26 +65,21 @@ def main():
 
     # FILES FOR CHECKPOINTING
     sgd_losses_f = 'sgd_losses.pkl'
-    asgd_losses_f = 'ASGD_first_losses.pkl'
-    asgd_stats_f  = 'ASGD_first_stats.pkl'
-    staleness_distr_f = 'ASGD_first_staleness_distr.pkl'
+    asgd_losses_f = 'ASGD_losses.pkl'
+    asgd_stats_f  = 'ASGD_stats.pkl'
+    staleness_distr_f = 'ASGD_staleness_distr.pkl'
     SGD_weight_properties_f = 'sgd_weight_properties.pkl'
-    ASGD_weight_properties_f = 'first_ASGD_weight_properties.pkl'
+    ASGD_weight_properties_f = 'ASGD_weight_properties.pkl'
     true_weight_properties_f = 'true_weight_properties.pkl'
 
     # For each checkpoint file
     sgd_losses_file = os.path.join(SGD_DIR, sgd_losses_f)
-    asgd_losses_file = os.path.join(ASAP_SGD_DIR, asgd_losses_f)
-    asgd_stats_file  = os.path.join(ASAP_SGD_DIR, asgd_stats_f)
-    staleness_distr_file = os.path.join(ASAP_SGD_DIR, staleness_distr_f)
+    asgd_losses_file = os.path.join(ASAP_DIR, asgd_losses_f)
+    asgd_stats_file  = os.path.join(ASAP_DIR, asgd_stats_f)
+    staleness_distr_file = os.path.join(ASAP_DIR, staleness_distr_f)
     SGD_weight_properties_file = os.path.join(SGD_DIR, SGD_weight_properties_f)
-    ASGD_weight_properties_file = os.path.join(ASAP_SGD_DIR, ASGD_weight_properties_f)
-    true_weight_properties_file = os.path.join(SGD_DIR, true_weight_properties_f)
-
-    # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
-    # TODO : change to 20 runs !
-    RUNS_REGULAR_SGD = 50      # Set always min to 1 for both methods (if want to retrieve/use the stored values)
-    RUNS_ASGD = 50
+    ASGD_weight_properties_file = os.path.join(ASAP_DIR, ASGD_weight_properties_f)
+    true_weight_properties_file = os.path.join(cfg_dir, true_weight_properties_f)
 
     if RUNS_REGULAR_SGD > 0:
         #RETRIEVE LOSSES
@@ -105,10 +126,14 @@ def main():
             RUNS_REGULAR_SGD = RUNS_REGULAR_SGD - 1
 
             # full splits => Always the same when using the same seed
-            X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin, true_w = load_linear_data(n_samples=100, n_features=110, noise=0.0,val_size=0.01,test_size=0.2, random_state= seed)
+            X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin, true_w = load_linear_data(n_samples= n_samples, n_features= n_features, noise=0.0,val_size=0.01,test_size=0.2, random_state= seed)
 
             X_comb = np.vstack([X_tr_lin, X_val_lin])
             y_comb = np.concatenate([y_tr_lin, y_val_lin])
+
+            # compute batch size = 10% of (train + val) examples, at least 1
+            n_trainval = X_comb.shape[0]
+            batch_size = max(1, int(0.1 * n_trainval))
 
             # 3) Compute 95% of max stable step size η₉₅
             _, S_comb, _ = svd(X_comb, full_matrices=False)
@@ -116,7 +141,7 @@ def main():
             eta_95  = 0.95 * eta_max
 
             start = time.perf_counter()
-            sgd_model = sgd_training(X_comb, y_comb, num_epochs = 10000, criterion = nn.MSELoss(), batch_size = 32, lr = eta_95, tol=1e-8)
+            sgd_model = sgd_training(X_comb, y_comb, num_epochs = 10000, criterion = nn.MSELoss(), batch_size = batch_size, lr = eta_95, tol=1e-8)
             end = time.perf_counter()
             sgd_time = end-start
 
@@ -215,10 +240,14 @@ def main():
             RUNS_ASGD = RUNS_ASGD - 1
 
             # full splits => Always the same when using the same seed
-            X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin, true_weight = load_linear_data(n_samples=100, n_features=110, noise=0.0, val_size=0.01,test_size=0.2, random_state=seed)
+            X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin, true_weight = load_linear_data(n_samples= n_samples, n_features= n_features, noise=0.0, val_size=0.01,test_size=0.2, random_state=seed)
 
             X_comb = np.vstack([X_tr_lin, X_val_lin])
             y_comb = np.concatenate([y_tr_lin, y_val_lin])
+
+            # compute batch size = 10% of (train + val) examples, at least 1
+            n_trainval = X_comb.shape[0]
+            batch_size = max(1, int(0.1 * n_trainval))
 
             # 3) Compute 95% of max stable step size η₉₅
             _, S_comb, _ = svd(X_comb, full_matrices=False)
@@ -232,11 +261,11 @@ def main():
 
             # Set up the configuration for the SSP training
             params_ssp = ConfigParameters(
-                num_workers = 5,
+                num_workers = 10,
                 staleness = 50, 
                 lr = eta_95/2,                          # HERE DIVIDED BY 2 SO THAT MAX LR = (1+A)*LR = ETA_95 => Otherwise very high test loss and bad convergence !!
                 local_steps = 10000,
-                batch_size = 10,
+                batch_size = batch_size,
                 device = "cuda" if torch.cuda.is_available() else "cpu",
                 log_level = logging.DEBUG,
                 tol = 1e-8,                             # The tol for workers is currently set at tol = 1e-8
@@ -253,26 +282,6 @@ def main():
             # Compute staleness distribution
             freq = np.array(staleness_distr) / sum(staleness_distr)  # normalize to probabilities
             ASGD_staleness_distributions.append(freq)
-            '''
-            print(f"{'Worker':>6s}  {'Mean':>8s}  {'Median':>8s}  {'Std':>8s}  {'%Over':>8s}")
-            print("-" * 45) 
-
-            # Per-worker stats
-            for wid, s in sorted(stats["per_worker"].items()):
-                mean    = s["mean"]
-                median  = s["median"]
-                std     = s["std"]
-                pct_over = s["pct_over_bound"]
-                print(f"{wid:6d}  {mean:8.4f}  {median:8.4f}  {std:8.4f}  {pct_over:8.2f}")
-
-            # Combined stats
-            c = stats["combined"]
-            print("\nCombined over all workers:")
-            print(f"  Mean         = {c['mean']:.4f}")
-            print(f"  Median       = {c['median']:.4f}")
-            print(f"  Std          = {c['std']:.4f}")
-            print(f"  % Over Bound = {c['pct_over_bound']:.2f}%")
-            '''
 
             # Evaluate the trained model on the test set
             asgd_model = build_model(asgd_params, model, dim)
@@ -315,11 +324,6 @@ def main():
         with open(ASGD_weight_properties_file, 'wb') as f:
             pickle.dump(ASGD_weight_properties, f)
 
-        # If you want to inspect the stats you can do:
-        # with open(stats_file, 'rb') as f:
-        #     ASGD_stats = pickle.load(f)
-        # now ASGD_stats is a list of dicts, each having
-        #   stats["per_worker"] and stats["combined"]
     
     # COMPARE LOSSES FOR THE SEEDS THAT HAVE BEEN USED IN BOTH METHODS UNTIL NOW
 

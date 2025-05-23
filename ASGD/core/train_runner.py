@@ -1,7 +1,7 @@
 from __future__ import annotations
 import multiprocessing as mp
 from types import SimpleNamespace
-from typing import Tuple, Type
+from typing import Tuple, Type,  Callable
 
 import torch
 import torch.nn as nn
@@ -12,6 +12,18 @@ from ..config import ConfigParameters
 from ..data.base import AbstractDataBuilder
 from typing import Callable
 from multiprocessing.managers import BaseManager
+
+
+class PSManager(BaseManager):
+    pass
+
+PSManager.register(
+    "ParameterServer",
+    callable=ParameterServer,
+)
+PSManager.register("get_staleness_stats", ParameterServer.get_staleness_stats)
+PSManager.register("get_hist",              ParameterServer.get_hist)
+PSManager.register("get_time_push",         ParameterServer.get_time_push)
 
 def run_training(
     dataset_builder: Callable[[int, int,int], Tuple[torch.utils.data.DataLoader,int]],
@@ -36,14 +48,6 @@ def run_training(
 
     # Initialize the model and parameter server
     init_model = model(input_dim)
-    # Start a custom manager server
-    class PSManager(BaseManager): pass
-    PSManager.register('ParameterServer', parameter_server)
-    PSManager.register('get_staleness_stats', parameter_server.get_staleness_stats)
-    PSManager.register('get_hist', ParameterServer.get_hist)
-    PSManager.register('get_time_push', ParameterServer.get_time_push)
-
-
 
     manager = PSManager()
     manager.start()
