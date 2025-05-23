@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 from ..models import LinearNetModel
 from scipy.stats import kurtosis
+import argparse
 
 def exp_delay(num_workers: int, scale: float = 1e-4) -> None:
     mean_stale = num_workers - 1
@@ -126,3 +127,21 @@ def sparsity_ratio(w: np.ndarray) -> float:
 def weight_kurtosis(w):
     # fisher=False → normal distribution has kurtosis = 3
     return kurtosis(w, fisher=False)
+
+
+def parse_args():
+    """
+    Parse command line arguments.
+    User will have to choose the amount of overparametrization between 110%, 150% and 200%.
+    :param overparam: Percentage of features vs samples.
+    :return: Parsed arguments.
+    """
+    p = argparse.ArgumentParser()
+    p.add_argument(
+        "--overparam",
+        choices=[110, 150, 200],
+        type=int,
+        required=True,
+        help="percent of features vs samples",
+    )
+    return p.parse_args()

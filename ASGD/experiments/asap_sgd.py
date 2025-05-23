@@ -20,18 +20,6 @@ import argparse
 
 from .. import *
 
-# USER WILL HAVE TO CHOOSE THE AMOUNT OF OVERPARAMETRIZATION
-def parse_args():
-    p = argparse.ArgumentParser()
-    p.add_argument(
-        "--overparam",
-        choices=[110, 150, 200],
-        type=int,
-        required=True,
-        help="percent of features vs samples",
-    )
-    return p.parse_args()
-
 def main():
     # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
     # TODO : change to 20 runs !
