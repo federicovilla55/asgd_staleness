@@ -21,20 +21,11 @@ import scipy.stats as stats_mod
 
 from .. import *
 
-# Checkpoint directory
-CHECKPOINT_DIR = pathlib.Path(__file__).with_suffix("").with_name("ckpt")
-CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
-
-# Checkpoint files
-SGD_DIR   = CHECKPOINT_DIR
-SAASGD_DIR  = CHECKPOINT_DIR / "SAASGD"
-SAASGD_DIR.mkdir(parents=True, exist_ok=True)
-
 def main():
         # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
     # TODO : change to 20 runs !
     RUNS_REGULAR_SGD = 200      # Set always min to 1 for both methods (if want to retrieve/use the stored values)
-    RUNS_ASGD = 20
+    RUNS_ASGD = 1
 
     # USER WILL HAVE TO CHOOSE THE AMOUNT OF OVERPARAMETRIZATION
     args = parse_args()
@@ -49,8 +40,8 @@ def main():
     # e.g. ckpt/overparam_150/SGD  and ckpt/overparam_150/ASAP_SGD
     cfg_dir = BASE_CKPT / f"overparam_{args.overparam}"
     SGD_DIR   = cfg_dir / "SGD"
-    ASAP_DIR  = cfg_dir / "ASAP_SGD"
-    for d in (SGD_DIR, ASAP_DIR):
+    SAASGD_DIR  = cfg_dir / "SAASGD"
+    for d in (SGD_DIR, SAASGD_DIR):
         d.mkdir(parents=True, exist_ok=True)
 
     # Set up logging
@@ -473,5 +464,5 @@ def main():
 
 
 if __name__ == "__main__":
-    for _ in range(10):
+    for _ in range(200):
         main()

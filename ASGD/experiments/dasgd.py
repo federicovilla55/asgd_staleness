@@ -21,15 +21,6 @@ from .. import *
 #from ASGD import *
 
 
-# Checkpoint directory
-CHECKPOINT_DIR = pathlib.Path(__file__).with_suffix("").with_name("ckpt")
-CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
-
-# Checkpoint files
-SGD_DIR   = CHECKPOINT_DIR
-DASGD_DIR  = CHECKPOINT_DIR / "DASGD"
-DASGD_DIR.mkdir(parents=True, exist_ok=True)
-
 def main():
     # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
     # TODO : change to 20 runs !
@@ -49,8 +40,8 @@ def main():
     # e.g. ckpt/overparam_150/SGD  and ckpt/overparam_150/ASAP_SGD
     cfg_dir = BASE_CKPT / f"overparam_{args.overparam}"
     SGD_DIR   = cfg_dir / "SGD"
-    ASAP_DIR  = cfg_dir / "ASAP_SGD"
-    for d in (SGD_DIR, ASAP_DIR):
+    DASGD_DIR  = cfg_dir / "DASGD"
+    for d in (SGD_DIR, DASGD_DIR):
         d.mkdir(parents=True, exist_ok=True)
 
 
