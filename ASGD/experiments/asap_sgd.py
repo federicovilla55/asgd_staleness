@@ -22,9 +22,8 @@ from .. import *
 
 def main():
     # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
-    # TODO : change to 20 runs !
-    RUNS_REGULAR_SGD = 150      # Set always min to 1 for both methods (if want to retrieve/use the stored values)
-    RUNS_ASGD = 150
+    RUNS_REGULAR_SGD = 100      # Set always min to 1 for both methods (if want to retrieve/use the stored values)
+    RUNS_ASGD = 100
 
     # USER WILL HAVE TO CHOOSE THE AMOUNT OF OVERPARAMETRIZATION
     args = parse_args()
