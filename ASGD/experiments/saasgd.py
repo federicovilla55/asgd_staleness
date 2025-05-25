@@ -465,4 +465,8 @@ def main():
 
 if __name__ == "__main__":
     for _ in range(200):
-        main()
+        try:
+            main()
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            pass
