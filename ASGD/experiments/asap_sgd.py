@@ -13,9 +13,9 @@ import logging
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from numpy.linalg import svd
-from scipy.stats import ttest_rel
 import os
 import scipy.stats as stats_mod
+
 import argparse
 
 from .. import *
@@ -113,6 +113,7 @@ def main():
             RUNS_REGULAR_SGD = RUNS_REGULAR_SGD - 1
 
             # full splits => Always the same when using the same seed
+
             X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin, true_w = load_linear_data(n_samples= n_samples, n_features= n_features, noise=0.0,val_size=0.01,test_size=0.2, random_state= seed)
 
             X_comb = np.vstack([X_tr_lin, X_val_lin])
@@ -204,11 +205,11 @@ def main():
             logging.info("Starting fresh on staleness distr")
         
         # INIT/RETRIEVE WEIGHT METRICS/PROPERTIES
-        
         if os.path.exists(ASGD_weight_properties_file):
             with open(ASGD_weight_properties_file, 'rb') as f:
                 ASGD_weight_properties = pickle.load(f)
             logging.info(f"Resuming weight properties: {len(ASGD_weight_properties)}/{len(seeds)} done")
+
         else:
             if len(ASGD_losses) == 0:
                 ASGD_weight_properties  = [] 
@@ -269,6 +270,7 @@ def main():
             # Compute staleness distribution
             freq = np.array(staleness_distr) / sum(staleness_distr)  # normalize to probabilities
             ASGD_staleness_distributions.append(freq)
+            
 
             # Evaluate the trained model on the test set
             asgd_model = build_model(asgd_params, model, dim)
@@ -401,6 +403,7 @@ def main():
         print(f"{key}: mean diff = {m:.4f}, 95% CI = [{ci_low:.4f}, {ci_high:.4f}]")
 
     # Paired hypothesis testing and Effect-size (Cohen’s d for paired data)
+    
     for j,key in enumerate(keys):
         d = diffs[:,j]
         d_mean, d_std = d.mean(), d.std(ddof=1)
@@ -441,12 +444,15 @@ def main():
     for j,key in enumerate(keys):
         # negative means ASGD is *closer* (on average) to the teacher than SGD
         mean_dist_diff = delta_sgd[:,j].mean() - delta_asgd[:,j].mean()
+
         print(f"{key}: mean(|SGD-teacher| - |ASGD-teacher|) = {mean_dist_diff:.4f}")
+        
 
     # you can also do a paired test on these distances:
     for j,key in enumerate(keys):
         d = delta_sgd[:,j] - delta_asgd[:,j]
         t_stat, pval = stats_mod.ttest_rel(delta_sgd[:,j], delta_asgd[:,j])
+
         print(f"{key}: paired t-test on dist-to-teacher p = {pval:.3e}")
 
     # — and finally, overlay the teacher’s *average* metric in your boxplots —
@@ -463,6 +469,7 @@ def main():
     plt.tight_layout()
     plt.show()
 
+    
 
 if __name__ == "__main__":
     main()

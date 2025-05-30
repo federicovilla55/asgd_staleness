@@ -31,6 +31,7 @@ class ParameterServer:
         self._lock = threading.Lock()
         # one list of staleness values per worker for tracking staleness stats
         self._staleness = defaultdict(list)
+        # One list of the global staleness count
         self.hist = [0] * (param.staleness +1) # We assume max staleness is 50, so easier data structure for F computation possible
         self.total = 0
         self.count_time_push = 0
@@ -46,7 +47,6 @@ class ParameterServer:
     # Method not implemented
     def push(self, wid, w_version: int, grads: list[torch.Tensor]) -> ParameterServerStatus:
         return ParameterServerStatus.REJECTED
-    
 
     def get_version(self):
         """Return the current version of the model parameters."""
@@ -61,7 +61,6 @@ class ParameterServer:
         """Return the raw counts of staleness occurrences for this run."""
         # note: self.hist is of length staleness+1
         return list(self.hist)
-
         
     def get_staleness_stats(self):
         """

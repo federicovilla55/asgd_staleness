@@ -13,7 +13,6 @@ from ..data.base import AbstractDataBuilder
 from typing import Callable
 from multiprocessing.managers import BaseManager
 
-
 class PSManager(BaseManager):
     pass
 
@@ -31,8 +30,6 @@ def run_training(
     dataset_builder: Callable[[int, int,int], Tuple[torch.utils.data.DataLoader,int]],
     model: Callable[[int], nn.Module],
     param: ConfigParameters = ConfigParameters(),
-    parameter_server: Callable = ParameterServer,
-    asgd_worker: Callable = worker,
 ) -> list[torch.Tensor]:
     """
     Helper function to run the Stale Synchronous Parallel training with the provided dataset builder, model and configuration parameters.
@@ -64,7 +61,7 @@ def run_training(
     start_evt = ctx.Event() # Create event so that all workers start at the same time
     for id in range(param.num_workers):
         p = ctx.Process(
-            target=asgd_worker, # Worker function
+            target=worker, # Worker function
             args=(id, ps_proxy, model, input_dim, dataset_builder, param, start_evt), # Arguments for the worker function
             daemon=False, # Daemon processes are not used as they are killed when the main process exits
         )
@@ -91,4 +88,5 @@ def run_training(
 
     # Return a list containing the staleness counts
     staleness_distr = ps_proxy.get_hist()
+
     return theta, input_dim, stats, staleness_distr
