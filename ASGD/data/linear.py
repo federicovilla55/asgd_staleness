@@ -28,7 +28,7 @@ class LinearRegressionBuilder(AbstractDataBuilder):
         noise: float,
         rng: np.random.RandomState,
     ):
-        X = rng.uniform(-3, 3, size=(n_samples, n_features)).astype(np.float32)
+        X = rng.uniform(-5, 5, size=(n_samples, n_features)).astype(np.float32)
         w = rng.randn(n_features)
         y = (X @ w + noise * rng.randn(n_samples)).astype(np.float32)
         return X, y

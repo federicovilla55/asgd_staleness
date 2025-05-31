@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from enum import Enum, auto
 from .data_types import ParameterServerStatus
+import time
 
 import collections
 from typing import Any, Dict, List, Tuple
@@ -26,46 +27,36 @@ class ParameterServer:
         self.param = param
         self.theta = [p.detach().share_memory_() for p in model.parameters()]
         self._current_ver = mp.Value("i", 0)
+        self.prev_theta = [p.clone().detach() for p in self.theta]
         self._lock = threading.Lock()
         # one list of staleness values per worker for tracking staleness stats
         self._staleness = defaultdict(list)
         # One list of the global staleness count
         self.hist = [0] * (param.staleness +1) # We assume max staleness is 50, so easier data structure for F computation possible
         self.total = 0
+        self.count_time_push = 0
+        self.count_time_pull = 0
 
     def pull(self):
-        return [p.clone() for p in self.theta], self._current_ver.value
+        server_start_pull = time.perf_counter()
+        result = [p.clone() for p in self.theta], self._current_ver.value
+        server_end_pull = time.perf_counter()
+        self.count_time_pull += (server_end_pull-server_start_pull)
+        return result
 
+    # Method not implemented
     def push(self, wid, w_version: int, grads: list[torch.Tensor]) -> ParameterServerStatus:
-        with self._lock:
-            curr = self._current_ver.value
-            st = curr - w_version
-            # record staleness of each worker regardless of accept/reject
-            self._staleness[wid].append(st)
-
-            if st >= self.param.staleness: # Reject any staleness larger than 50 so that it fits in the list (this will normally not happen)
-                return ParameterServerStatus.REJECTED
-            
-            self.hist[st] += 1
-            self.total += 1
-
-            # empirical CDF of staleness up to (and including) this value => ASAP SGD implementation
-            cum = sum(self.hist[: st+1])
-            F = cum / self.total
-            CA = 1 + self.param.Amplitude * (1 - 2 * F)
-            scaled_lr = CA * self.param.lr
-
-            # SGD update
-            for p, g in zip(self.theta, grads):
-                p.sub_(scaled_lr * g.to(p.device))
-
-        self._current_ver.value += 1
-        return ParameterServerStatus.ACCEPTED
+        return ParameterServerStatus.REJECTED
 
     def get_version(self):
+        """Return the current version of the model parameters."""
         with self._lock:
             return self._current_ver.value
         
+    def get_time_push(self):
+        """Return the time spent in push and pull operations."""
+        return (self.count_time_push, self.count_time_pull)
+    
     def get_hist(self) -> list[int]:
         """Return the raw counts of staleness occurrences for this run."""
         # note: self.hist is of length staleness+1

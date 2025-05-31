@@ -1,8 +1,10 @@
 """
-Test ASAP SGD
+Test SSASGD on linear regression with synthetic overparameterized data.
 
 From the base repository directory:  
-`python -m ASGD.experiments.asap_sgd`
+`python -m ASGD.experiments.saasgd`
+
+This tests the "Staleness-aware Asynchronous SGD for Distributed Deep Learning" (https://arxiv.org/pdf/1511.05950).
 """
 from __future__ import annotations
 import time, pathlib, pickle, random, sys
@@ -13,17 +15,17 @@ import logging
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from numpy.linalg import svd
+from scipy.stats import ttest_rel
 import os
 import scipy.stats as stats_mod
-
-import argparse
 
 from .. import *
 
 def main():
-    # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
-    RUNS_REGULAR_SGD = 100      # Set always min to 1 for both methods (if want to retrieve/use the stored values)
-    RUNS_ASGD = 100
+        # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
+    # TODO : change to 20 runs !
+    RUNS_REGULAR_SGD = 200      # Set always min to 1 for both methods (if want to retrieve/use the stored values)
+    RUNS_ASGD = 1
 
     # USER WILL HAVE TO CHOOSE THE AMOUNT OF OVERPARAMETRIZATION
     args = parse_args()
@@ -38,8 +40,8 @@ def main():
     # e.g. ckpt/overparam_150/SGD  and ckpt/overparam_150/ASAP_SGD
     cfg_dir = BASE_CKPT / f"overparam_{args.overparam}"
     SGD_DIR   = cfg_dir / "SGD"
-    ASAP_DIR  = cfg_dir / "ASAP_SGD"
-    for d in (SGD_DIR, ASAP_DIR):
+    SAASGD_DIR  = cfg_dir / "SAASGD"
+    for d in (SGD_DIR, SAASGD_DIR):
         d.mkdir(parents=True, exist_ok=True)
 
     # Set up logging
@@ -61,12 +63,12 @@ def main():
 
     # For each checkpoint file
     sgd_losses_file = os.path.join(SGD_DIR, sgd_losses_f)
-    asgd_losses_file = os.path.join(ASAP_DIR, asgd_losses_f)
-    asgd_stats_file  = os.path.join(ASAP_DIR, asgd_stats_f)
-    staleness_distr_file = os.path.join(ASAP_DIR, staleness_distr_f)
+    asgd_losses_file = os.path.join(SAASGD_DIR, asgd_losses_f)
+    asgd_stats_file  = os.path.join(SAASGD_DIR, asgd_stats_f)
+    staleness_distr_file = os.path.join(SAASGD_DIR, staleness_distr_f)
     SGD_weight_properties_file = os.path.join(SGD_DIR, SGD_weight_properties_f)
-    ASGD_weight_properties_file = os.path.join(ASAP_DIR, ASGD_weight_properties_f)
-    true_weight_properties_file = os.path.join(cfg_dir, true_weight_properties_f)
+    ASGD_weight_properties_file = os.path.join(SAASGD_DIR, ASGD_weight_properties_f)
+    true_weight_properties_file = os.path.join(SGD_DIR, true_weight_properties_f)
 
     if RUNS_REGULAR_SGD > 0:
         #RETRIEVE LOSSES
@@ -113,13 +115,11 @@ def main():
             RUNS_REGULAR_SGD = RUNS_REGULAR_SGD - 1
 
             # full splits => Always the same when using the same seed
-
-            X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin, true_w = load_linear_data(n_samples= n_samples, n_features= n_features, noise=0.0,val_size=0.01,test_size=0.2, random_state= seed)
+            X_tr_lin, y_tr_lin, X_val_lin, y_val_lin, X_te_lin, y_te_lin, true_w = load_linear_data(n_samples=n_samples, n_features=n_features, noise=0.0,val_size=0.01,test_size=0.2, random_state= seed)
 
             X_comb = np.vstack([X_tr_lin, X_val_lin])
             y_comb = np.concatenate([y_tr_lin, y_val_lin])
 
-            # compute batch size = 10% of (train + val) examples, at least 1
             n_trainval = X_comb.shape[0]
             batch_size = max(1, int(0.1 * n_trainval))
 
@@ -205,11 +205,11 @@ def main():
             logging.info("Starting fresh on staleness distr")
         
         # INIT/RETRIEVE WEIGHT METRICS/PROPERTIES
+        
         if os.path.exists(ASGD_weight_properties_file):
             with open(ASGD_weight_properties_file, 'rb') as f:
                 ASGD_weight_properties = pickle.load(f)
             logging.info(f"Resuming weight properties: {len(ASGD_weight_properties)}/{len(seeds)} done")
-
         else:
             if len(ASGD_losses) == 0:
                 ASGD_weight_properties  = [] 
@@ -233,7 +233,6 @@ def main():
             X_comb = np.vstack([X_tr_lin, X_val_lin])
             y_comb = np.concatenate([y_tr_lin, y_val_lin])
 
-            # compute batch size = 10% of (train + val) examples, at least 1
             n_trainval = X_comb.shape[0]
             batch_size = max(1, int(0.1 * n_trainval))
 
@@ -251,18 +250,18 @@ def main():
             params_ssp = ConfigParameters(
                 num_workers = 10,
                 staleness = 50, 
-                lr = eta_95/2,                          # HERE DIVIDED BY 2 SO THAT MAX LR = (1+A)*LR = ETA_95 => Otherwise very high test loss and bad convergence !!
+                lr = eta_95,                          # DEPENDING ON ALGO THIS HAS TO BE CHANGED !
                 local_steps = 10000,
                 batch_size = batch_size,
                 device = "cuda" if torch.cuda.is_available() else "cpu",
                 log_level = logging.DEBUG,
                 tol = 1e-8,                             # The tol for workers is currently set at tol = 1e-8
-                Amplitude = 1                           # The max amplitude deviation from the base stepsize
+                Amplitude = 1                           # The max amplitude IN ASAP
             )
 
             # Run the SSP training and measure the time taken
             start = time.perf_counter()
-            asgd_params, dim, stats, staleness_distr = run_training(dataset_builder, model, params_ssp, parameter_server=ParameterServerASAP_SGD)
+            asgd_params, dim, stats, staleness_distr = run_training(dataset_builder, model, params_ssp, parameter_server=ParameterServerSAASGD)
             end = time.perf_counter()
             asgd_time = end - start
             ASGD_stats.append(stats)
@@ -270,7 +269,6 @@ def main():
             # Compute staleness distribution
             freq = np.array(staleness_distr) / sum(staleness_distr)  # normalize to probabilities
             ASGD_staleness_distributions.append(freq)
-            
 
             # Evaluate the trained model on the test set
             asgd_model = build_model(asgd_params, model, dim)
@@ -313,7 +311,6 @@ def main():
         with open(ASGD_weight_properties_file, 'wb') as f:
             pickle.dump(ASGD_weight_properties, f)
 
-    
     # COMPARE LOSSES FOR THE SEEDS THAT HAVE BEEN USED IN BOTH METHODS UNTIL NOW
 
     # Align lengths (in case one list is longer because of incomplete runs)
@@ -403,7 +400,6 @@ def main():
         print(f"{key}: mean diff = {m:.4f}, 95% CI = [{ci_low:.4f}, {ci_high:.4f}]")
 
     # Paired hypothesis testing and Effect-size (Cohen’s d for paired data)
-    
     for j,key in enumerate(keys):
         d = diffs[:,j]
         d_mean, d_std = d.mean(), d.std(ddof=1)
@@ -444,15 +440,12 @@ def main():
     for j,key in enumerate(keys):
         # negative means ASGD is *closer* (on average) to the teacher than SGD
         mean_dist_diff = delta_sgd[:,j].mean() - delta_asgd[:,j].mean()
-
         print(f"{key}: mean(|SGD-teacher| - |ASGD-teacher|) = {mean_dist_diff:.4f}")
-        
 
     # you can also do a paired test on these distances:
     for j,key in enumerate(keys):
         d = delta_sgd[:,j] - delta_asgd[:,j]
         t_stat, pval = stats_mod.ttest_rel(delta_sgd[:,j], delta_asgd[:,j])
-
         print(f"{key}: paired t-test on dist-to-teacher p = {pval:.3e}")
 
     # — and finally, overlay the teacher’s *average* metric in your boxplots —
@@ -469,7 +462,11 @@ def main():
     plt.tight_layout()
     plt.show()
 
-    
 
 if __name__ == "__main__":
-    main()
+    for _ in range(200):
+        try:
+            main()
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            pass
