@@ -3,9 +3,9 @@
 Project Description: [Read Here](https://github.com/epfml/OptML_course/blob/d61132781e50c3528249cb6325ff9aacd55a26d3/labs/mini-project/miniproject_description.pdf).
 Project Report : See below
 
-In order to run the main ASGD variants script, you have to be placed at the root of the project. Then, you can run the following command :
+In order to run the main ASGD variants script, you have to be placed at the root of the project. Then, you can run the following command in the command shell:
 ```
-    python -m ASGD.run_tests <asgd_variant_name> <overparam_number>
+python -m ASGD.run_tests <asgd_variant_name> <overparam_number>
 ```
 
 where
