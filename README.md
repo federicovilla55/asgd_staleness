@@ -26,7 +26,7 @@ Below is the project structure along with explanations of the key components to 
 │   │   ├── asap_sgd.py # ASAP model running script
 │   │   ├── dasgd.py    # DASGD model running script 
 │   │   └── saasgd.py   # SAASGD model running script
-│   ├── models          # Code related to other models used
+│   ├── models
 │   └── run_tests.py    # File running the main script
 │ 
 └── Generalization of Asynchronous SGD Variants.pdf # Project report
