@@ -23,7 +23,6 @@ from .. import *
 
 def main():
     # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
-    # TODO : change to 20 runs !
     RUNS_REGULAR_SGD = 200
     RUNS_ASGD = 200
 
