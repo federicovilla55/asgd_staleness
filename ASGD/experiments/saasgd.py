@@ -25,7 +25,7 @@ def main():
         # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
     # TODO : change to 20 runs !
     RUNS_REGULAR_SGD = 200      # Set always min to 1 for both methods (if want to retrieve/use the stored values)
-    RUNS_ASGD = 1
+    RUNS_ASGD = 200
 
     # USER WILL HAVE TO CHOOSE THE AMOUNT OF OVERPARAMETRIZATION
     args = parse_args()
@@ -281,11 +281,11 @@ def main():
             m_asgd = {'l2':l2_norm(w_asgd),'sparsity': sparsity_ratio(w_asgd),'kurtosis': weight_kurtosis(w_asgd)}
             ASGD_weight_properties.append(m_asgd)
 
-            ASGD_loss = evaluate_model("ASGD", asgd_model, X_te_lin, y_te_lin)
+            ASGD_loss = evaluate_model("SA-ASGD", asgd_model, X_te_lin, y_te_lin)
 
             ASGD_losses.append(ASGD_loss)
 
-            print("Time Comparison for run:" + str(idx) + f": ASGD {asgd_time:2f} sec")
+            print("Time Comparison for run:" + str(idx) + f": SA-ASGD {asgd_time:2f} sec")
 
         # SAVE THE LOSSES
         with open(asgd_losses_file, 'wb') as f:
@@ -293,11 +293,11 @@ def main():
 
         with open(asgd_losses_file, 'rb') as f:
             ASGD_losses = pickle.load(f)
-        print("Retrieved ASGD losses")
+        print("Retrieved SA-ASGD losses")
         
         avg_ASGD_loss = sum(ASGD_losses)/len(ASGD_losses)
 
-        print("Average ASGD loss =" + str(avg_ASGD_loss))
+        print("Average SA-ASGD loss =" + str(avg_ASGD_loss))
 
         #SAVE THE WORKER STATS
         with open(asgd_stats_file, 'wb') as f:
@@ -335,7 +335,7 @@ def main():
     std_diff = np.std(diffs)
 
     print(f"Computed over {n} seeds:")
-    print(f"Mean difference (SGD - ASGD): {mean_diff:.4e}")
+    print(f"Mean difference (SGD - SA-ASGD): {mean_diff:.4e}")
     print(f"Median difference: {median_diff:.4e}")
     print(f"Std of difference: {std_diff:.4e}")
 
@@ -346,10 +346,10 @@ def main():
     plt.axvline(median_diff, color='blue', linestyle='dotted', linewidth=1, label=f"Median: {median_diff:.2e}")
     plt.xlabel("SGD_loss - ASGD_loss")
     plt.ylabel("Frequency")
-    plt.title("Distribution of Loss Differences (SGD vs. ASGD)")
+    plt.title("Distribution of Loss Differences (SGD vs. SA-ASGD)")
     plt.legend()
     plt.tight_layout()
-    plt.show()
+    plt.savefig("loss_difference_histogram.png")
 
     # VISUALIZE THE STALENESS DISTRIBUTION OF THE LAST 3 RUNS
     #–– Extract the last three runs
@@ -365,7 +365,7 @@ def main():
     axes[0].set_ylabel("P(τ)")
     fig.suptitle("Last 3 Runs: Staleness Distributions")
     plt.tight_layout()
-    plt.show()
+    plt.savefig("staleness_distribution_last3_runs.png")
 
     # COMPARE THE WEIGHT METRICS/PROPERTIES
     
@@ -420,17 +420,19 @@ def main():
     # Boxplot
     fig, axes = plt.subplots(1,3,figsize=(12,4))
     for j,key in enumerate(keys):
-        axes[j].boxplot([sgd_arr[:,j], asgd_arr[:,j]], labels=['SGD','ASGD'])
+        axes[j].boxplot([sgd_arr[:,j], asgd_arr[:,j]], labels=['SGD','SA-ASGD'])
         axes[j].set_title(key)
-    plt.tight_layout(); plt.show()
+    plt.tight_layout() 
+    plt.savefig("weight_metrics_boxplot.png")
 
     for j,key in enumerate(keys):
         plt.figure()
         plt.scatter(sgd_arr[:,j], asgd_arr[:,j], alpha=0.7)
         lim = max(sgd_arr[:,j].max(), asgd_arr[:,j].max())
         plt.plot([0,lim],[0,lim], linestyle='--')
-        plt.xlabel('SGD'); plt.ylabel('ASGD'); plt.title(key)
-        plt.tight_layout(); plt.show()
+        plt.xlabel('SGD'); plt.ylabel('SA-ASGD'); plt.title(key)
+        plt.tight_layout()
+        #???plt.savefig(f"weight_metrics_scatter_{key}.png")
 
     delta_sgd  = np.abs(sgd_arr  - true_arr)   # how far each run’s SGD metrics sit from its ground truth
     delta_asgd = np.abs(asgd_arr - true_arr)
@@ -438,9 +440,9 @@ def main():
     # — now compute distance-to-teacher for each method —
     # average signed difference in *distance* to teacher:
     for j,key in enumerate(keys):
-        # negative means ASGD is *closer* (on average) to the teacher than SGD
+        # negative means SA-ASGD is *closer* (on average) to the teacher than SGD
         mean_dist_diff = delta_sgd[:,j].mean() - delta_asgd[:,j].mean()
-        print(f"{key}: mean(|SGD-teacher| - |ASGD-teacher|) = {mean_dist_diff:.4f}")
+        print(f"{key}: mean(|SGD-teacher| - |SA-ASGD-teacher|) = {mean_dist_diff:.4f}")
 
     # you can also do a paired test on these distances:
     for j,key in enumerate(keys):
@@ -453,20 +455,18 @@ def main():
 
     fig, axes = plt.subplots(1,3,figsize=(12,4))
     for j,key in enumerate(keys):
-        axes[j].boxplot([sgd_arr[:,j], asgd_arr[:,j]], labels=['SGD','ASGD'])
+        axes[j].boxplot([sgd_arr[:,j], asgd_arr[:,j]], labels=['SGD','SA-ASGD'])
         # horizontal line at the *average* teacher metric
         axes[j].axhline(teacher_means[j],
                         color='C2', linestyle='--', label='teacher')
         axes[j].set_title(key)
         axes[j].legend()
     plt.tight_layout()
-    plt.show()
+    plt.savefig("weight_metrics_boxplot_with_teacher.png")
 
 
 if __name__ == "__main__":
-    for _ in range(200):
-        try:
-            main()
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            pass
+    #try:
+    main()
+    #except Exception as e:
+    #print(f"An error occurred: {e}")

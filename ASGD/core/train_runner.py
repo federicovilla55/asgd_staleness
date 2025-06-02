@@ -30,6 +30,8 @@ def run_training(
     dataset_builder: Callable[[int, int,int], Tuple[torch.utils.data.DataLoader,int]],
     model: Callable[[int], nn.Module],
     param: ConfigParameters = ConfigParameters(),
+    parameter_server: Callable = ParameterServer,
+    asgd_worker: Callable = worker,
 ) -> list[torch.Tensor]:
     """
     Helper function to run the Stale Synchronous Parallel training with the provided dataset builder, model and configuration parameters.
