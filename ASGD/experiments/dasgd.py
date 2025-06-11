@@ -1,8 +1,11 @@
 """
-Test DASGD
+Test DASGD against standard SGD on linear regression with synthetic overparameterized data.
 
-From the base repository directory:  
+From the base repository directory run:  
 `python -m ASGD.experiments.dasgd`
+
+The implemented DASGD algorithm is taken from: "Asynchronous SGD with stale gradient dynamic adjustment for deep learning training" 
+(https://www.sciencedirect.com/science/article/pii/S0020025524011344?via%3Dihub).
 """
 from __future__ import annotations
 import time, pathlib, pickle, random, sys
@@ -18,10 +21,22 @@ import os
 import scipy.stats as stats_mod
 
 from .. import *
-#from ASGD import *
 
+def main() -> None:
+    """
+    Main function for running the experiments comparing DASGD algorithm and standard SGD.
 
-def main():
+    In the script a comparative experiment between DASGD and standard SGD is performed by:
+    1. Generate a synthetic linear regression datasets (with specified overparameterization).
+    2. Trains models using both SGD and DASGD across multiple random seeds (200 by default).
+    3. Evaluates trained models across multiple metrics: test loss, weight properties (L2 norm, sparsity, kurtosis) and convergence statistics.
+    4. Compares results via statistical tests (paired t-tests)
+    5. Visualize results: loss distributions, staleness patterns, weight characteristics. 
+
+    Strong reproducibility is ensured by using a fixed master seed.
+    Checkpoints are created to save losses, weight properties, and staleness distributions for both DASGD and SGD training.
+    """
+
     # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
     RUNS_REGULAR_SGD = 200
     RUNS_ASGD = 200
@@ -464,4 +479,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        sys.exit(1)

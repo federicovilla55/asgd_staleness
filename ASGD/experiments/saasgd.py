@@ -1,10 +1,10 @@
 """
-Test SSASGD on linear regression with synthetic overparameterized data.
+Test SA-ASGD against standard SGD on linear regression with synthetic overparameterized data.
 
 From the base repository directory:  
 `python -m ASGD.experiments.saasgd`
 
-This tests the "Staleness-aware Asynchronous SGD for Distributed Deep Learning" (https://arxiv.org/pdf/1511.05950).
+The implemented SA-ASGD algorithm is taken from: "Staleness-aware Asynchronous SGD for Distributed Deep Learning" (https://arxiv.org/pdf/1511.05950).
 """
 from __future__ import annotations
 import time, pathlib, pickle, random, sys
@@ -22,7 +22,21 @@ import scipy.stats as stats_mod
 from .. import *
 
 def main():
-        # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
+    """
+    Main function for running the experiments comparing ASAP-SGD algorithm and standard SGD.
+
+    In the script a comparative experiment between ASAP-SGD and standard SGD is performed by:
+    1. Generate a synthetic linear regression datasets (with specified overparameterization).
+    2. Trains models using both SGD and ASAP-SGD across multiple random seeds (200 by default).
+    3. Evaluates trained models across multiple metrics: test loss, weight properties (L2 norm, sparsity, kurtosis) and convergence statistics.
+    4. Compares results via statistical tests (paired t-tests)
+    5. Visualize results: loss distributions, staleness patterns, weight characteristics. 
+
+    Strong reproducibility is ensured by using a fixed master seed.
+    Checkpoints are created to save losses, weight properties, and staleness distributions for both ASAP-SGD and SGD training.
+    """
+
+    # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
     RUNS_REGULAR_SGD = 200      # Set always min to 1 for both methods (if want to retrieve/use the stored values)
     RUNS_ASGD = 1
 
@@ -463,9 +477,8 @@ def main():
 
 
 if __name__ == "__main__":
-    for _ in range(200):
-        try:
-            main()
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            pass
+    try:
+        main()
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        sys.exit(1)

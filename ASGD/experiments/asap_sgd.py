@@ -1,8 +1,11 @@
 """
-Test ASAP SGD
+Test ASAP-SGD against standard SGD on linear regression with synthetic overparameterized data.
 
 From the base repository directory:  
 `python -m ASGD.experiments.asap_sgd`
+
+The implemented ASAP-SGD algorithm is taken from: "Instance-based Adaptiveness to Staleness in Asynchronous SGD"
+(https://proceedings.mlr.press/v162/backstrom22a/backstrom22a.pdf).
 """
 from __future__ import annotations
 import time, pathlib, pickle, random, sys
@@ -21,6 +24,20 @@ import argparse
 from .. import *
 
 def main():
+    """
+    Main function for running the experiments comparing ASAP-SGD algorithm and standard SGD.
+
+    In the script a comparative experiment between ASAP-SGD and standard SGD is performed by:
+    1. Generate a synthetic linear regression datasets (with specified overparameterization).
+    2. Trains models using both SGD and ASAP-SGD across multiple random seeds (200 by default).
+    3. Evaluates trained models across multiple metrics: test loss, weight properties (L2 norm, sparsity, kurtosis) and convergence statistics.
+    4. Compares results via statistical tests (paired t-tests)
+    5. Visualize results: loss distributions, staleness patterns, weight characteristics. 
+
+    Strong reproducibility is ensured by using a fixed master seed.
+    Checkpoints are created to save losses, weight properties, and staleness distributions for both ASAP-SGD and SGD training.
+    """
+        
     # AMOUNT OF SEEDS YOU WANT TO COMPUTE NOW
     RUNS_REGULAR_SGD = 100      # Set always min to 1 for both methods (if want to retrieve/use the stored values)
     RUNS_ASGD = 100
@@ -262,6 +279,7 @@ def main():
 
             # Run the SSP training and measure the time taken
             start = time.perf_counter()
+
             asgd_params, dim, stats, staleness_distr = run_training(dataset_builder, model, params_ssp, parameter_server=ParameterServerASAP_SGD)
             end = time.perf_counter()
             asgd_time = end - start
@@ -472,4 +490,8 @@ def main():
     
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        sys.exit(1)
