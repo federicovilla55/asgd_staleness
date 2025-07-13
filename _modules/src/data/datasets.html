@@ -1,0 +1,250 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.data.datasets &mdash; Generalization Analysis of Asynchronous SGD Variants  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Generalization Analysis of Asynchronous SGD Variants
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../src.core.html">src.core package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../src.models.html">src.models package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../src.data.html">src.data package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../src.experiments.html">src.experiments package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../src.config.html">src.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../src.run_tests.html">src.run_tests module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Generalization Analysis of Asynchronous SGD Variants</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.data.datasets</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.data.datasets</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">TensorDataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span>
+
+<div class="viewcode-block" id="create_linear_dataset">
+<a class="viewcode-back" href="../../../src.data.datasets.html#src.data.datasets.create_linear_dataset">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_linear_dataset</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                          <span class="n">n_features</span><span class="o">=</span><span class="mi">110</span><span class="p">,</span>
+                          <span class="n">noise</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                          <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Overparameterized linear regression dataset:</span>
+<span class="sd">      - X sampled U(-3, 3)</span>
+<span class="sd">      - y = X @ w_true + noise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">n_features</span><span class="p">))</span>
+    <span class="n">w_true</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n_features</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">w_true</span><span class="p">)</span> <span class="o">+</span> <span class="n">noise</span> <span class="o">*</span> <span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n_samples</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">X</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">y</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">w_true</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="create_poly_varied_dataset">
+<a class="viewcode-back" href="../../../src.data.datasets.html#src.data.datasets.create_poly_varied_dataset">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_poly_varied_dataset</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                               <span class="n">n_features</span><span class="o">=</span><span class="mi">110</span><span class="p">,</span>
+                               <span class="n">max_degree</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                               <span class="n">noise</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                               <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Overparameterized nonlinear regression dataset:</span>
+<span class="sd">      - X sampled U(-3, 3)</span>
+<span class="sd">      - Each feature i raised to its own degree_i ∈ [1, max_degree]</span>
+<span class="sd">      - y = sum_i w_true[i] * (X[:, i] ** degree_i) + noise</span>
+<span class="sd">      </span>
+<span class="sd">    Return: X_raw, y, degrees</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">n_features</span><span class="p">))</span>
+    <span class="n">w_true</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n_features</span><span class="p">)</span>
+    <span class="n">degrees</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_degree</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_features</span><span class="p">)</span>
+    <span class="n">X_pow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">X</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">**</span> <span class="n">deg</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">deg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">degrees</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">X_pow</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">w_true</span><span class="p">)</span> <span class="o">+</span> <span class="n">noise</span> <span class="o">*</span> <span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n_samples</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">X</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">y</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">degrees</span></div>
+
+
+<div class="viewcode-block" id="split_data">
+<a class="viewcode-back" href="../../../src.data.datasets.html#src.data.datasets.split_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">split_data</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">val_size</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Splits (X, y) into train/val/test.</span>
+<span class="sd">      - train: (1 - val_size - test_size)</span>
+<span class="sd">      - val: val_size</span>
+<span class="sd">      - test: test_size</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">X_temp</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_temp</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="n">test_size</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">)</span>
+    <span class="n">val_rel</span> <span class="o">=</span> <span class="n">val_size</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">test_size</span><span class="p">)</span>
+    <span class="n">X_train</span><span class="p">,</span> <span class="n">X_val</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_val</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+        <span class="n">X_temp</span><span class="p">,</span> <span class="n">y_temp</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="n">val_rel</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span></div>
+
+
+<div class="viewcode-block" id="load_linear_data">
+<a class="viewcode-back" href="../../../src.data.datasets.html#src.data.datasets.load_linear_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_linear_data</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                     <span class="n">n_features</span><span class="o">=</span><span class="mi">110</span><span class="p">,</span>
+                     <span class="n">noise</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                     <span class="n">val_size</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+                     <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                     <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a linear overparam dataset and split it.</span>
+<span class="sd">    Returns: X_train, y_train, X_val, y_val, X_test, y_test</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">create_linear_dataset</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">n_features</span><span class="p">,</span> <span class="n">noise</span><span class="p">,</span> <span class="n">random_state</span><span class="p">)</span>
+    <span class="n">X_tr_lin</span><span class="p">,</span> <span class="n">y_tr_lin</span><span class="p">,</span> <span class="n">X_val_lin</span><span class="p">,</span> <span class="n">y_val_lin</span><span class="p">,</span> <span class="n">X_te_lin</span><span class="p">,</span> <span class="n">y_te_lin</span> <span class="o">=</span> <span class="n">split_data</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">val_size</span><span class="p">,</span> <span class="n">test_size</span><span class="p">,</span> <span class="n">random_state</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">X_tr_lin</span><span class="p">,</span> <span class="n">y_tr_lin</span><span class="p">,</span> <span class="n">X_val_lin</span><span class="p">,</span> <span class="n">y_val_lin</span><span class="p">,</span> <span class="n">X_te_lin</span><span class="p">,</span> <span class="n">y_te_lin</span><span class="p">,</span> <span class="n">w</span></div>
+
+
+<div class="viewcode-block" id="load_poly_varied_data">
+<a class="viewcode-back" href="../../../src.data.datasets.html#src.data.datasets.load_poly_varied_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_poly_varied_data</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                          <span class="n">n_features</span><span class="o">=</span><span class="mi">110</span><span class="p">,</span>
+                          <span class="n">max_degree</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                          <span class="n">noise</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                          <span class="n">val_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                          <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                          <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a polynomial-varied dataset, split it, and also return degrees.</span>
+<span class="sd">    Returns: (X_train, y_train, X_val, y_val, X_test, y_test, degrees)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">degrees</span> <span class="o">=</span> <span class="n">create_poly_varied_dataset</span><span class="p">(</span>
+        <span class="n">n_samples</span><span class="p">,</span> <span class="n">n_features</span><span class="p">,</span> <span class="n">max_degree</span><span class="p">,</span> <span class="n">noise</span><span class="p">,</span> <span class="n">random_state</span><span class="p">)</span>
+    <span class="n">splits</span> <span class="o">=</span> <span class="n">split_data</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">val_size</span><span class="p">,</span> <span class="n">test_size</span><span class="p">,</span> <span class="n">random_state</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="n">splits</span><span class="p">,</span> <span class="n">degrees</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="create_linear_data_loader">
+<a class="viewcode-back" href="../../../src.data.datasets.html#src.data.datasets.create_linear_data_loader">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_linear_data_loader</span><span class="p">(</span><span class="n">num_workers</span><span class="p">,</span>
+                              <span class="n">batch_size</span><span class="p">,</span>
+                              <span class="n">worker_id</span><span class="p">,</span>
+                              <span class="n">n_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                              <span class="n">n_features</span><span class="o">=</span><span class="mi">110</span><span class="p">,</span>
+                              <span class="n">noise</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                              <span class="n">val_size</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+                              <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                              <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a DataLoader for a shard of the linear training set.</span>
+<span class="sd">    Also returns the input dimension.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">load_linear_data</span><span class="p">(</span>
+        <span class="n">n_samples</span><span class="p">,</span> <span class="n">n_features</span><span class="p">,</span> <span class="n">noise</span><span class="p">,</span> <span class="n">val_size</span><span class="p">,</span> <span class="n">test_size</span><span class="p">,</span> <span class="n">random_state</span><span class="p">)</span> <span class="c1">#Give full dataset to each worker</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">TensorDataset</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">X_train</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">y_train</span><span class="p">))</span>
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">loader</span><span class="p">,</span> <span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="create_poly_varied_data_loader">
+<a class="viewcode-back" href="../../../src.data.datasets.html#src.data.datasets.create_poly_varied_data_loader">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_poly_varied_data_loader</span><span class="p">(</span><span class="n">num_workers</span><span class="p">,</span>
+                                   <span class="n">batch_size</span><span class="p">,</span>
+                                   <span class="n">worker_id</span><span class="p">,</span>
+                                   <span class="n">n_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                                   <span class="n">n_features</span><span class="o">=</span><span class="mi">110</span><span class="p">,</span>
+                                   <span class="n">max_degree</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                                   <span class="n">noise</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                   <span class="n">val_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                                   <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                                   <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a DataLoader for a shard of the poly-varied training set.</span>
+<span class="sd">    Also returns the input dimension (same as n_features).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">degrees</span> <span class="o">=</span> <span class="n">load_poly_varied_data</span><span class="p">(</span>
+        <span class="n">n_samples</span><span class="p">,</span> <span class="n">n_features</span><span class="p">,</span> <span class="n">max_degree</span><span class="p">,</span> <span class="n">noise</span><span class="p">,</span> <span class="n">val_size</span><span class="p">,</span> <span class="n">test_size</span><span class="p">,</span> <span class="n">random_state</span> <span class="o">+</span> <span class="n">worker_id</span><span class="p">)</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">TensorDataset</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">X_train</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">y_train</span><span class="p">))</span>
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">loader</span><span class="p">,</span> <span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">degrees</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Federico Villa, Caspar Amery, Marco Lourenco.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

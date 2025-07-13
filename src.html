@@ -1,0 +1,353 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src package &mdash; Generalization Analysis of Asynchronous SGD Variants  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Generalization Analysis of Asynchronous SGD Variants
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="src.core.html">src.core package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.html">src.models package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.data.html">src.data package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.experiments.html">src.experiments package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.config.html">src.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.run_tests.html">src.run_tests module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Generalization Analysis of Asynchronous SGD Variants</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">src package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/src.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="src-package">
+<h1>src package<a class="headerlink" href="#src-package" title="Link to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="src.core.html">src.core package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.core.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.core.html#module-src.core.data_types">src.core.data_types module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.data_types.ParameterServerStatus"><code class="docutils literal notranslate"><span class="pre">ParameterServerStatus</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#src.core.data_types.ParameterServerStatus.ACCEPTED"><code class="docutils literal notranslate"><span class="pre">ParameterServerStatus.ACCEPTED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#src.core.data_types.ParameterServerStatus.REJECTED"><code class="docutils literal notranslate"><span class="pre">ParameterServerStatus.REJECTED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#src.core.data_types.ParameterServerStatus.SHUTDOWN"><code class="docutils literal notranslate"><span class="pre">ParameterServerStatus.SHUTDOWN</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.core.html#module-src.core.parameter_server">src.core.parameter_server module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.parameter_server.ParameterServer"><code class="docutils literal notranslate"><span class="pre">ParameterServer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#src.core.parameter_server.ParameterServer.get_hist"><code class="docutils literal notranslate"><span class="pre">ParameterServer.get_hist()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#src.core.parameter_server.ParameterServer.get_staleness_stats"><code class="docutils literal notranslate"><span class="pre">ParameterServer.get_staleness_stats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#src.core.parameter_server.ParameterServer.get_time_push"><code class="docutils literal notranslate"><span class="pre">ParameterServer.get_time_push()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#src.core.parameter_server.ParameterServer.get_version"><code class="docutils literal notranslate"><span class="pre">ParameterServer.get_version()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#src.core.parameter_server.ParameterServer.pull"><code class="docutils literal notranslate"><span class="pre">ParameterServer.pull()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#src.core.parameter_server.ParameterServer.push"><code class="docutils literal notranslate"><span class="pre">ParameterServer.push()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.core.html#module-src.core.parameter_server_asap">src.core.parameter_server_asap module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.parameter_server_asap.ParameterServerASAP_SGD"><code class="docutils literal notranslate"><span class="pre">ParameterServerASAP_SGD</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#src.core.parameter_server_asap.ParameterServerASAP_SGD.push"><code class="docutils literal notranslate"><span class="pre">ParameterServerASAP_SGD.push()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.core.html#module-src.core.parameter_server_dasgd">src.core.parameter_server_dasgd module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.parameter_server_dasgd.ParameterServerDASGD"><code class="docutils literal notranslate"><span class="pre">ParameterServerDASGD</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#src.core.parameter_server_dasgd.ParameterServerDASGD.push"><code class="docutils literal notranslate"><span class="pre">ParameterServerDASGD.push()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.core.html#module-src.core.parameter_server_saasgd">src.core.parameter_server_saasgd module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.parameter_server_saasgd.ParameterServerSAASGD"><code class="docutils literal notranslate"><span class="pre">ParameterServerSAASGD</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#src.core.parameter_server_saasgd.ParameterServerSAASGD.push"><code class="docutils literal notranslate"><span class="pre">ParameterServerSAASGD.push()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.core.html#module-src.core.train_runner">src.core.train_runner module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.train_runner.PSManager"><code class="docutils literal notranslate"><span class="pre">PSManager</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#src.core.train_runner.PSManager.ParameterServer"><code class="docutils literal notranslate"><span class="pre">PSManager.ParameterServer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#src.core.train_runner.PSManager.get_hist"><code class="docutils literal notranslate"><span class="pre">PSManager.get_hist()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#src.core.train_runner.PSManager.get_staleness_stats"><code class="docutils literal notranslate"><span class="pre">PSManager.get_staleness_stats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#src.core.train_runner.PSManager.get_time_push"><code class="docutils literal notranslate"><span class="pre">PSManager.get_time_push()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.train_runner.run_training"><code class="docutils literal notranslate"><span class="pre">run_training()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.core.html#module-src.core.utils">src.core.utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.utils.build_model"><code class="docutils literal notranslate"><span class="pre">build_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.utils.evaluate_model"><code class="docutils literal notranslate"><span class="pre">evaluate_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.utils.exp_delay"><code class="docutils literal notranslate"><span class="pre">exp_delay()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.utils.l1_norm"><code class="docutils literal notranslate"><span class="pre">l1_norm()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.utils.l2_norm"><code class="docutils literal notranslate"><span class="pre">l2_norm()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.utils.parse_args"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.utils.set_seed"><code class="docutils literal notranslate"><span class="pre">set_seed()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.utils.sgd_training"><code class="docutils literal notranslate"><span class="pre">sgd_training()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.utils.sparsity_ratio"><code class="docutils literal notranslate"><span class="pre">sparsity_ratio()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.utils.weight_kurtosis"><code class="docutils literal notranslate"><span class="pre">weight_kurtosis()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.core.html#module-src.core.worker">src.core.worker module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html#src.core.worker.worker"><code class="docutils literal notranslate"><span class="pre">worker()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.core.html#module-src.core">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.data.html">src.data package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.data.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.data.html#module-src.data.base">src.data.base module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.data.html#src.data.base.AbstractDataBuilder"><code class="docutils literal notranslate"><span class="pre">AbstractDataBuilder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="src.data.html#src.data.base.AbstractDataBuilder.split_data"><code class="docutils literal notranslate"><span class="pre">AbstractDataBuilder.split_data()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.data.html#module-src.data.datasets">src.data.datasets module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.data.html#src.data.datasets.create_linear_data_loader"><code class="docutils literal notranslate"><span class="pre">create_linear_data_loader()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.data.html#src.data.datasets.create_linear_dataset"><code class="docutils literal notranslate"><span class="pre">create_linear_dataset()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.data.html#src.data.datasets.create_poly_varied_data_loader"><code class="docutils literal notranslate"><span class="pre">create_poly_varied_data_loader()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.data.html#src.data.datasets.create_poly_varied_dataset"><code class="docutils literal notranslate"><span class="pre">create_poly_varied_dataset()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.data.html#src.data.datasets.load_linear_data"><code class="docutils literal notranslate"><span class="pre">load_linear_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.data.html#src.data.datasets.load_poly_varied_data"><code class="docutils literal notranslate"><span class="pre">load_poly_varied_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.data.html#src.data.datasets.split_data"><code class="docutils literal notranslate"><span class="pre">split_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.data.html#module-src.data.full">src.data.full module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.data.html#src.data.full.FullDataLoaderBuilder"><code class="docutils literal notranslate"><span class="pre">FullDataLoaderBuilder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.data.html#module-src.data.linear">src.data.linear module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.data.html#src.data.linear.LinearRegressionBuilder"><code class="docutils literal notranslate"><span class="pre">LinearRegressionBuilder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.data.html#module-src.data.poly">src.data.poly module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.data.html#src.data.poly.PolyVariedBuilder"><code class="docutils literal notranslate"><span class="pre">PolyVariedBuilder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.data.html#module-src.data">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.experiments.html">src.experiments package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.experiments.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.experiments.html#module-src.experiments.asap_sgd">src.experiments.asap_sgd module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.experiments.html#src.experiments.asap_sgd.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.experiments.html#module-src.experiments.dasgd">src.experiments.dasgd module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.experiments.html#src.experiments.dasgd.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.experiments.html#module-src.experiments.saasgd">src.experiments.saasgd module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.experiments.html#src.experiments.saasgd.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.experiments.html#module-src.experiments">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.html">src.models package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.models.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.models.html#module-src.models.linear">src.models.linear module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.models.html#src.models.linear.LinearNetModel"><code class="docutils literal notranslate"><span class="pre">LinearNetModel</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="src.models.html#src.models.linear.LinearNetModel.forward"><code class="docutils literal notranslate"><span class="pre">LinearNetModel.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.models.html#module-src.models">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-src.config">
+<span id="src-config-module"></span><h2>src.config module<a class="headerlink" href="#module-src.config" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.config.ConfigParameters">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.config.</span></span><span class="sig-name descname"><span class="pre">ConfigParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">staleness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'cpu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Amplitude</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/config.html#ConfigParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.config.ConfigParameters" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration for Stale Synchronous Parallel training for Asynchronous SGD (SSP-ASGD).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_workers</strong> (<em>int</em>) – Number of worker processes.</p></li>
+<li><p><strong>staleness</strong> (<em>int</em>) – Staleness bound allowed for the workers during training. Represents the maximum number of versions a worker can be behind the latest version.</p></li>
+<li><p><strong>lr</strong> (<em>float</em>) – Learning rate for the model. Represents the step size for updating the model parameters.</p></li>
+<li><p><strong>local_steps</strong> (<em>int</em>) – Number of steps/updates each worker locally computes before pushing gradients to the server.</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em>) – Batch size for each training step and the data loader.</p></li>
+<li><p><strong>device</strong> (<em>str</em>) – Device to use for training (e.g., “cuda” or “cpu”).</p></li>
+<li><p><strong>log_level</strong> (<em>int</em>) – Logging verbosity level.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.config.ConfigParameters.Amplitude">
+<span class="sig-name descname"><span class="pre">Amplitude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#src.config.ConfigParameters.Amplitude" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.config.ConfigParameters.batch_size">
+<span class="sig-name descname"><span class="pre">batch_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></em><a class="headerlink" href="#src.config.ConfigParameters.batch_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.config.ConfigParameters.device">
+<span class="sig-name descname"><span class="pre">device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'cpu'</span></em><a class="headerlink" href="#src.config.ConfigParameters.device" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.config.ConfigParameters.local_steps">
+<span class="sig-name descname"><span class="pre">local_steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#src.config.ConfigParameters.local_steps" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.config.ConfigParameters.log_level">
+<span class="sig-name descname"><span class="pre">log_level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">20</span></em><a class="headerlink" href="#src.config.ConfigParameters.log_level" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.config.ConfigParameters.lr">
+<span class="sig-name descname"><span class="pre">lr</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.01</span></em><a class="headerlink" href="#src.config.ConfigParameters.lr" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.config.ConfigParameters.num_workers">
+<span class="sig-name descname"><span class="pre">num_workers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#src.config.ConfigParameters.num_workers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.config.ConfigParameters.staleness">
+<span class="sig-name descname"><span class="pre">staleness</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">50</span></em><a class="headerlink" href="#src.config.ConfigParameters.staleness" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.config.ConfigParameters.tol">
+<span class="sig-name descname"><span class="pre">tol</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-08</span></em><a class="headerlink" href="#src.config.ConfigParameters.tol" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-src.run_tests">
+<span id="src-run-tests-module"></span><h2>src.run_tests module<a class="headerlink" href="#module-src.run_tests" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.run_tests.main">
+<span class="sig-prename descclassname"><span class="pre">src.run_tests.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/run_tests.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.run_tests.main" title="Link to this definition"></a></dt>
+<dd><p>Main function to run the experiment based on command line arguments.
+It accepts two arguments: test and overparameterization.</p>
+<p>E.g. to run the script:
+<cite>python src/run_tests.py dasgd 200</cite>
+<cite>python -m src.run_tests saasgd 110</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>test</strong> – The test/experiment to run. Options are ‘saasgd’, ‘dasgd’, ‘asap_sgd’.</p></li>
+<li><p><strong>overparam</strong> – The overparameterization size. Options are ‘110’, ‘150’, ‘200’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-src">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-src" title="Link to this heading"></a></h2>
+<p>Package Initialization Module</p>
+<p>The file initializes the initializes the package and imports necessary modules.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Federico Villa, Caspar Amery, Marco Lourenco.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,205 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.core.train_runner &mdash; Generalization Analysis of Asynchronous SGD Variants  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Generalization Analysis of Asynchronous SGD Variants
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../src.core.html">src.core package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../src.models.html">src.models package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../src.data.html">src.data package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../src.experiments.html">src.experiments package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../src.config.html">src.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../src.run_tests.html">src.run_tests module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Generalization Analysis of Asynchronous SGD Variants</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.core.train_runner</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.core.train_runner</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimpleNamespace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span>  <span class="n">Callable</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.worker</span><span class="w"> </span><span class="kn">import</span> <span class="n">worker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.parameter_server</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParameterServer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigParameters</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..data.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractDataBuilder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing.managers</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseManager</span>
+
+<div class="viewcode-block" id="PSManager">
+<a class="viewcode-back" href="../../../src.core.train_runner.html#src.core.train_runner.PSManager">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PSManager</span><span class="p">(</span><span class="n">BaseManager</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<span class="c1"># register a generic “factory” by name here, picklable because it&#39;s a top‐level function</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_ps_factory</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">cfg</span><span class="p">):</span>
+    <span class="c1"># this will be monkey‐patched at runtime to point at the right class</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;_ps_factory was not replaced!&quot;</span><span class="p">)</span>
+
+<span class="n">PSManager</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;ParameterServer&quot;</span><span class="p">,</span> <span class="nb">callable</span><span class="o">=</span><span class="n">_ps_factory</span><span class="p">)</span>
+<span class="n">PSManager</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;get_staleness_stats&quot;</span><span class="p">,</span> <span class="n">ParameterServer</span><span class="o">.</span><span class="n">get_staleness_stats</span><span class="p">)</span>
+<span class="n">PSManager</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;get_hist&quot;</span><span class="p">,</span>              <span class="n">ParameterServer</span><span class="o">.</span><span class="n">get_hist</span><span class="p">)</span>
+<span class="n">PSManager</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;get_time_push&quot;</span><span class="p">,</span>         <span class="n">ParameterServer</span><span class="o">.</span><span class="n">get_time_push</span><span class="p">)</span>
+
+<div class="viewcode-block" id="run_training">
+<a class="viewcode-back" href="../../../src.core.train_runner.html#src.core.train_runner.run_training">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_training</span><span class="p">(</span>
+    <span class="n">dataset_builder</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span><span class="nb">int</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">,</span><span class="nb">int</span><span class="p">]],</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">],</span>
+    <span class="n">param</span><span class="p">:</span> <span class="n">ConfigParameters</span> <span class="o">=</span> <span class="n">ConfigParameters</span><span class="p">(),</span>
+    <span class="n">parameter_server</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">ParameterServer</span><span class="p">,</span>
+    <span class="n">asgd_worker</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">worker</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function to run the Stale Synchronous Parallel training with the provided dataset builder, model and configuration parameters.</span>
+
+<span class="sd">    :param dataset_builder: Function used to build the dataset.</span>
+<span class="sd">    :param model: Model class to be trained.</span>
+<span class="sd">    :param param: SSP Configuration parameters.</span>
+<span class="sd">    :type param: ConfigParameters</span>
+<span class="sd">    :return: The final model parameters after training.</span>
+<span class="sd">    :rtype: list[torch.Tensor]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+     <span class="c1"># — before starting the manager, swap out the factory function we registered —</span>
+    <span class="n">PSManager</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;ParameterServer&quot;</span><span class="p">,</span> <span class="nb">callable</span><span class="o">=</span><span class="n">parameter_server</span><span class="p">)</span>
+    
+    <span class="c1"># Retrieve input dimension from dataset builder with provided batch size and number of workers</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">input_dim</span> <span class="o">=</span> <span class="n">dataset_builder</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">num_workers</span><span class="p">,</span> <span class="n">param</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Initialize the model and parameter server</span>
+    <span class="n">init_model</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">input_dim</span><span class="p">)</span>
+
+    <span class="n">manager</span> <span class="o">=</span> <span class="n">PSManager</span><span class="p">()</span>
+    <span class="n">manager</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">ps_proxy</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">ParameterServer</span><span class="p">(</span><span class="n">init_model</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+
+    <span class="c1"># Create a process for each worker</span>
+    <span class="c1"># Use either &quot;fork&quot; or &quot;spawn&quot; based on your OS (&quot;fork&quot; on Linux)</span>
+    <span class="n">ctx</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;spawn&quot;</span><span class="p">)</span> <span class="c1"># Context for multiprocessing</span>
+    <span class="n">procs</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># List to hold the processes</span>
+    <span class="n">start_evt</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span> <span class="c1"># Create event so that all workers start at the same time</span>
+    <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">num_workers</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">worker</span><span class="p">,</span> <span class="c1"># Worker function</span>
+            <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">ps_proxy</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">input_dim</span><span class="p">,</span> <span class="n">dataset_builder</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">start_evt</span><span class="p">),</span> <span class="c1"># Arguments for the worker function</span>
+            <span class="n">daemon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># Daemon processes are not used as they are killed when the main process exits</span>
+        <span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="c1"># Start the worker process</span>
+        <span class="n">procs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="c1"># Append the process to the list</span>
+    
+    <span class="n">start_evt</span><span class="o">.</span><span class="n">set</span><span class="p">()</span> <span class="c1"># Start all the workers at the same time</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">procs</span><span class="p">:</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">join</span><span class="p">()</span> <span class="c1"># Wait for all processes to finish</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">exitcode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># Check if the process exited with an error</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Worker </span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> crashed (exitcode </span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">exitcode</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+
+    <span class="n">theta</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">ps_proxy</span><span class="o">.</span><span class="n">pull</span><span class="p">()</span> <span class="c1"># Get the final parameter theta from the server</span>
+
+    <span class="n">time_push</span> <span class="o">=</span> <span class="n">ps_proxy</span><span class="o">.</span><span class="n">get_time_push</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Final time for all (pushes, pulls) = </span><span class="si">{</span><span class="n">time_push</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1">#print(&quot;Final Version: &quot;, ps.get_version())</span>
+    <span class="c1">#logging.info(&quot;SSP training finished&quot;)</span>
+
+    <span class="c1"># Return the staleness stats for the workers</span>
+    <span class="n">stats</span>    <span class="o">=</span> <span class="n">ps_proxy</span><span class="o">.</span><span class="n">get_staleness_stats</span><span class="p">()</span>
+
+    <span class="c1"># Return a list containing the staleness counts</span>
+    <span class="n">staleness_distr</span> <span class="o">=</span> <span class="n">ps_proxy</span><span class="o">.</span><span class="n">get_hist</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">theta</span><span class="p">,</span> <span class="n">input_dim</span><span class="p">,</span> <span class="n">stats</span><span class="p">,</span> <span class="n">staleness_distr</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Federico Villa, Caspar Amery, Marco Lourenco.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

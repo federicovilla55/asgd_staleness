@@ -1,0 +1,273 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.data package &mdash; Generalization Analysis of Asynchronous SGD Variants  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="src.experiments package" href="src.experiments.html" />
+    <link rel="prev" title="src.models package" href="src.models.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Generalization Analysis of Asynchronous SGD Variants
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="src.core.html">src.core package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.html">src.models package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">src.data package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.data.base">src.data.base module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.data.base.AbstractDataBuilder"><code class="docutils literal notranslate"><span class="pre">AbstractDataBuilder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.data.base.AbstractDataBuilder.split_data"><code class="docutils literal notranslate"><span class="pre">AbstractDataBuilder.split_data()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.data.datasets">src.data.datasets module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.data.datasets.create_linear_data_loader"><code class="docutils literal notranslate"><span class="pre">create_linear_data_loader()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.data.datasets.create_linear_dataset"><code class="docutils literal notranslate"><span class="pre">create_linear_dataset()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.data.datasets.create_poly_varied_data_loader"><code class="docutils literal notranslate"><span class="pre">create_poly_varied_data_loader()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.data.datasets.create_poly_varied_dataset"><code class="docutils literal notranslate"><span class="pre">create_poly_varied_dataset()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.data.datasets.load_linear_data"><code class="docutils literal notranslate"><span class="pre">load_linear_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.data.datasets.load_poly_varied_data"><code class="docutils literal notranslate"><span class="pre">load_poly_varied_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.data.datasets.split_data"><code class="docutils literal notranslate"><span class="pre">split_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.data.full">src.data.full module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.data.full.FullDataLoaderBuilder"><code class="docutils literal notranslate"><span class="pre">FullDataLoaderBuilder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.data.linear">src.data.linear module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.data.linear.LinearRegressionBuilder"><code class="docutils literal notranslate"><span class="pre">LinearRegressionBuilder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.data.poly">src.data.poly module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.data.poly.PolyVariedBuilder"><code class="docutils literal notranslate"><span class="pre">PolyVariedBuilder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.data">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.experiments.html">src.experiments package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.config.html">src.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.run_tests.html">src.run_tests module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Generalization Analysis of Asynchronous SGD Variants</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">src.data package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/src.data.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="src-data-package">
+<h1>src.data package<a class="headerlink" href="#src-data-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-src.data.base">
+<span id="src-data-base-module"></span><h2>src.data.base module<a class="headerlink" href="#module-src.data.base" title="Link to this heading"></a></h2>
+<p>Shared abstract class for dataset builders.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.data.base.AbstractDataBuilder">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.data.base.</span></span><span class="sig-name descname"><span class="pre">AbstractDataBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/data/base.html#AbstractDataBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.data.base.AbstractDataBuilder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.data.base.AbstractDataBuilder.split_data">
+<span class="sig-name descname"><span class="pre">split_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/data/base.html#AbstractDataBuilder.split_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.data.base.AbstractDataBuilder.split_data" title="Link to this definition"></a></dt>
+<dd><p>Splits (X, y) into train/val/test.
+- train: (1 - val_size - test_size)
+- val: val_size
+- test: test_size</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-src.data.datasets">
+<span id="src-data-datasets-module"></span><h2>src.data.datasets module<a class="headerlink" href="#module-src.data.datasets" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.data.datasets.create_linear_data_loader">
+<span class="sig-prename descclassname"><span class="pre">src.data.datasets.</span></span><span class="sig-name descname"><span class="pre">create_linear_data_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_workers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">110</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/data/datasets.html#create_linear_data_loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.data.datasets.create_linear_data_loader" title="Link to this definition"></a></dt>
+<dd><p>Return a DataLoader for a shard of the linear training set.
+Also returns the input dimension.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.data.datasets.create_linear_dataset">
+<span class="sig-prename descclassname"><span class="pre">src.data.datasets.</span></span><span class="sig-name descname"><span class="pre">create_linear_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">110</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/data/datasets.html#create_linear_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.data.datasets.create_linear_dataset" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Overparameterized linear regression dataset:</dt><dd><ul class="simple">
+<li><p>X sampled U(-3, 3)</p></li>
+<li><p>y = X &#64; w_true + noise</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.data.datasets.create_poly_varied_data_loader">
+<span class="sig-prename descclassname"><span class="pre">src.data.datasets.</span></span><span class="sig-name descname"><span class="pre">create_poly_varied_data_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_workers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">110</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_degree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/data/datasets.html#create_poly_varied_data_loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.data.datasets.create_poly_varied_data_loader" title="Link to this definition"></a></dt>
+<dd><p>Return a DataLoader for a shard of the poly-varied training set.
+Also returns the input dimension (same as n_features).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.data.datasets.create_poly_varied_dataset">
+<span class="sig-prename descclassname"><span class="pre">src.data.datasets.</span></span><span class="sig-name descname"><span class="pre">create_poly_varied_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">110</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_degree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/data/datasets.html#create_poly_varied_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.data.datasets.create_poly_varied_dataset" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Overparameterized nonlinear regression dataset:</dt><dd><ul class="simple">
+<li><p>X sampled U(-3, 3)</p></li>
+<li><p>Each feature i raised to its own degree_i ∈ [1, max_degree]</p></li>
+<li><p>y = sum_i w_true[i] * (X[:, i] ** degree_i) + noise</p></li>
+</ul>
+</dd>
+</dl>
+<p>Return: X_raw, y, degrees</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.data.datasets.load_linear_data">
+<span class="sig-prename descclassname"><span class="pre">src.data.datasets.</span></span><span class="sig-name descname"><span class="pre">load_linear_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">110</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/data/datasets.html#load_linear_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.data.datasets.load_linear_data" title="Link to this definition"></a></dt>
+<dd><p>Generate a linear overparam dataset and split it.
+Returns: X_train, y_train, X_val, y_val, X_test, y_test</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.data.datasets.load_poly_varied_data">
+<span class="sig-prename descclassname"><span class="pre">src.data.datasets.</span></span><span class="sig-name descname"><span class="pre">load_poly_varied_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">110</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_degree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/data/datasets.html#load_poly_varied_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.data.datasets.load_poly_varied_data" title="Link to this definition"></a></dt>
+<dd><p>Generate a polynomial-varied dataset, split it, and also return degrees.
+Returns: (X_train, y_train, X_val, y_val, X_test, y_test, degrees)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.data.datasets.split_data">
+<span class="sig-prename descclassname"><span class="pre">src.data.datasets.</span></span><span class="sig-name descname"><span class="pre">split_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/data/datasets.html#split_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.data.datasets.split_data" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Splits (X, y) into train/val/test.</dt><dd><ul class="simple">
+<li><p>train: (1 - val_size - test_size)</p></li>
+<li><p>val: val_size</p></li>
+<li><p>test: test_size</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-src.data.full">
+<span id="src-data-full-module"></span><h2>src.data.full module<a class="headerlink" href="#module-src.data.full" title="Link to this heading"></a></h2>
+<p>A ultra‑simple builder that always returns the <em>complete</em> dataset.</p>
+<p>Use this when you want every worker to look at identical data, exactly
+like the <cite>FullDataLoaderBuilder</cite> from your notebook.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.data.full.FullDataLoaderBuilder">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.data.full.</span></span><span class="sig-name descname"><span class="pre">FullDataLoaderBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/data/full.html#FullDataLoaderBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.data.full.FullDataLoaderBuilder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+</section>
+<section id="module-src.data.linear">
+<span id="src-data-linear-module"></span><h2>src.data.linear module<a class="headerlink" href="#module-src.data.linear" title="Link to this heading"></a></h2>
+<p>Synthetic over-parameterised linear regression dataset builder.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.data.linear.LinearRegressionBuilder">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.data.linear.</span></span><span class="sig-name descname"><span class="pre">LinearRegressionBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">110</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shard</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/data/linear.html#LinearRegressionBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.data.linear.LinearRegressionBuilder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="src.data.base.html#src.data.base.AbstractDataBuilder" title="src.data.base.AbstractDataBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractDataBuilder</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-src.data.poly">
+<span id="src-data-poly-module"></span><h2>src.data.poly module<a class="headerlink" href="#module-src.data.poly" title="Link to this heading"></a></h2>
+<p>Non-linear “poly-varied” synthetic regression builder.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.data.poly.PolyVariedBuilder">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.data.poly.</span></span><span class="sig-name descname"><span class="pre">PolyVariedBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">110</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_degree</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shard</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/data/poly.html#PolyVariedBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.data.poly.PolyVariedBuilder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="src.data.base.html#src.data.base.AbstractDataBuilder" title="src.data.base.AbstractDataBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractDataBuilder</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-src.data">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-src.data" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="src.models.html" class="btn btn-neutral float-left" title="src.models package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="src.experiments.html" class="btn btn-neutral float-right" title="src.experiments package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Federico Villa, Caspar Amery, Marco Lourenco.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

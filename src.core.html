@@ -1,0 +1,486 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.core package &mdash; Generalization Analysis of Asynchronous SGD Variants  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="src.models package" href="src.models.html" />
+    <link rel="prev" title="Generalization Analysis of Asynchronous SGD Variants" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Generalization Analysis of Asynchronous SGD Variants
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">src.core package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.core.data_types">src.core.data_types module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.data_types.ParameterServerStatus"><code class="docutils literal notranslate"><span class="pre">ParameterServerStatus</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.core.data_types.ParameterServerStatus.ACCEPTED"><code class="docutils literal notranslate"><span class="pre">ParameterServerStatus.ACCEPTED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.core.data_types.ParameterServerStatus.REJECTED"><code class="docutils literal notranslate"><span class="pre">ParameterServerStatus.REJECTED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.core.data_types.ParameterServerStatus.SHUTDOWN"><code class="docutils literal notranslate"><span class="pre">ParameterServerStatus.SHUTDOWN</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.core.parameter_server">src.core.parameter_server module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.parameter_server.ParameterServer"><code class="docutils literal notranslate"><span class="pre">ParameterServer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.core.parameter_server.ParameterServer.get_hist"><code class="docutils literal notranslate"><span class="pre">ParameterServer.get_hist()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.core.parameter_server.ParameterServer.get_staleness_stats"><code class="docutils literal notranslate"><span class="pre">ParameterServer.get_staleness_stats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.core.parameter_server.ParameterServer.get_time_push"><code class="docutils literal notranslate"><span class="pre">ParameterServer.get_time_push()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.core.parameter_server.ParameterServer.get_version"><code class="docutils literal notranslate"><span class="pre">ParameterServer.get_version()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.core.parameter_server.ParameterServer.pull"><code class="docutils literal notranslate"><span class="pre">ParameterServer.pull()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.core.parameter_server.ParameterServer.push"><code class="docutils literal notranslate"><span class="pre">ParameterServer.push()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.core.parameter_server_asap">src.core.parameter_server_asap module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.parameter_server_asap.ParameterServerASAP_SGD"><code class="docutils literal notranslate"><span class="pre">ParameterServerASAP_SGD</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.core.parameter_server_asap.ParameterServerASAP_SGD.push"><code class="docutils literal notranslate"><span class="pre">ParameterServerASAP_SGD.push()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.core.parameter_server_dasgd">src.core.parameter_server_dasgd module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.parameter_server_dasgd.ParameterServerDASGD"><code class="docutils literal notranslate"><span class="pre">ParameterServerDASGD</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.core.parameter_server_dasgd.ParameterServerDASGD.push"><code class="docutils literal notranslate"><span class="pre">ParameterServerDASGD.push()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.core.parameter_server_saasgd">src.core.parameter_server_saasgd module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.parameter_server_saasgd.ParameterServerSAASGD"><code class="docutils literal notranslate"><span class="pre">ParameterServerSAASGD</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.core.parameter_server_saasgd.ParameterServerSAASGD.push"><code class="docutils literal notranslate"><span class="pre">ParameterServerSAASGD.push()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.core.train_runner">src.core.train_runner module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.train_runner.PSManager"><code class="docutils literal notranslate"><span class="pre">PSManager</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.core.train_runner.PSManager.ParameterServer"><code class="docutils literal notranslate"><span class="pre">PSManager.ParameterServer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.core.train_runner.PSManager.get_hist"><code class="docutils literal notranslate"><span class="pre">PSManager.get_hist()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.core.train_runner.PSManager.get_staleness_stats"><code class="docutils literal notranslate"><span class="pre">PSManager.get_staleness_stats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.core.train_runner.PSManager.get_time_push"><code class="docutils literal notranslate"><span class="pre">PSManager.get_time_push()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.train_runner.run_training"><code class="docutils literal notranslate"><span class="pre">run_training()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.core.utils">src.core.utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.utils.build_model"><code class="docutils literal notranslate"><span class="pre">build_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.utils.evaluate_model"><code class="docutils literal notranslate"><span class="pre">evaluate_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.utils.exp_delay"><code class="docutils literal notranslate"><span class="pre">exp_delay()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.utils.l1_norm"><code class="docutils literal notranslate"><span class="pre">l1_norm()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.utils.l2_norm"><code class="docutils literal notranslate"><span class="pre">l2_norm()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.utils.parse_args"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.utils.set_seed"><code class="docutils literal notranslate"><span class="pre">set_seed()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.utils.sgd_training"><code class="docutils literal notranslate"><span class="pre">sgd_training()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.utils.sparsity_ratio"><code class="docutils literal notranslate"><span class="pre">sparsity_ratio()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.utils.weight_kurtosis"><code class="docutils literal notranslate"><span class="pre">weight_kurtosis()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.core.worker">src.core.worker module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.core.worker.worker"><code class="docutils literal notranslate"><span class="pre">worker()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.core">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.html">src.models package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.data.html">src.data package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.experiments.html">src.experiments package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.config.html">src.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.run_tests.html">src.run_tests module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Generalization Analysis of Asynchronous SGD Variants</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">src.core package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/src.core.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="src-core-package">
+<h1>src.core package<a class="headerlink" href="#src-core-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-src.core.data_types">
+<span id="src-core-data-types-module"></span><h2>src.core.data_types module<a class="headerlink" href="#module-src.core.data_types" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.core.data_types.ParameterServerStatus">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.core.data_types.</span></span><span class="sig-name descname"><span class="pre">ParameterServerStatus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/core/data_types.html#ParameterServerStatus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.data_types.ParameterServerStatus" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Enum for the status of the parameter server.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.core.data_types.ParameterServerStatus.ACCEPTED">
+<span class="sig-name descname"><span class="pre">ACCEPTED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#src.core.data_types.ParameterServerStatus.ACCEPTED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.core.data_types.ParameterServerStatus.REJECTED">
+<span class="sig-name descname"><span class="pre">REJECTED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#src.core.data_types.ParameterServerStatus.REJECTED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.core.data_types.ParameterServerStatus.SHUTDOWN">
+<span class="sig-name descname"><span class="pre">SHUTDOWN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#src.core.data_types.ParameterServerStatus.SHUTDOWN" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-src.core.parameter_server">
+<span id="src-core-parameter-server-module"></span><h2>src.core.parameter_server module<a class="headerlink" href="#module-src.core.parameter_server" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.core.parameter_server.ParameterServer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.core.parameter_server.</span></span><span class="sig-name descname"><span class="pre">ParameterServer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/core/parameter_server.html#ParameterServer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.parameter_server.ParameterServer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Parameter Server for Stale Synchronous Parallel training.
+The server manages the global model parameters and coordinates the gradient updates from multiple workers.
+Each worker computes gradients locally and with a <cite>push</cite> operation sends the result to the server, which aggregates the gradients and updates the model parameters.
+Each worker can receive the latest model parameters with a <cite>pull</cite> operation.</p>
+<p>Arguments:
+:param model: PyTorch model instance
+:type model: nn.Module
+:param param: Configuration parameters
+:type param: ConfigParameters</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.parameter_server.ParameterServer.get_hist">
+<span class="sig-name descname"><span class="pre">get_hist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/src/core/parameter_server.html#ParameterServer.get_hist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.parameter_server.ParameterServer.get_hist" title="Link to this definition"></a></dt>
+<dd><p>Return the raw counts of staleness occurrences for this run.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.parameter_server.ParameterServer.get_staleness_stats">
+<span class="sig-name descname"><span class="pre">get_staleness_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/core/parameter_server.html#ParameterServer.get_staleness_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.parameter_server.ParameterServer.get_staleness_stats" title="Link to this definition"></a></dt>
+<dd><p>Returns a dict:
+{“per_worker”: { wid: { “mean”:…, “median”:…, “std”:…, “pct_over_bound”:…}, …},”combined”: {“mean”:…,”median”:…,”std”:…,”pct_over_bound”:…}}</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.parameter_server.ParameterServer.get_time_push">
+<span class="sig-name descname"><span class="pre">get_time_push</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/core/parameter_server.html#ParameterServer.get_time_push"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.parameter_server.ParameterServer.get_time_push" title="Link to this definition"></a></dt>
+<dd><p>Return the time spent in push and pull operations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.parameter_server.ParameterServer.get_version">
+<span class="sig-name descname"><span class="pre">get_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/core/parameter_server.html#ParameterServer.get_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.parameter_server.ParameterServer.get_version" title="Link to this definition"></a></dt>
+<dd><p>Return the current version of the model parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.parameter_server.ParameterServer.pull">
+<span class="sig-name descname"><span class="pre">pull</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/core/parameter_server.html#ParameterServer.pull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.parameter_server.ParameterServer.pull" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.parameter_server.ParameterServer.push">
+<span class="sig-name descname"><span class="pre">push</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="src.core.data_types.html#src.core.data_types.ParameterServerStatus" title="src.core.data_types.ParameterServerStatus"><span class="pre">ParameterServerStatus</span></a></span></span><a class="reference internal" href="_modules/src/core/parameter_server.html#ParameterServer.push"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.parameter_server.ParameterServer.push" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-src.core.parameter_server_asap">
+<span id="src-core-parameter-server-asap-module"></span><h2>src.core.parameter_server_asap module<a class="headerlink" href="#module-src.core.parameter_server_asap" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.core.parameter_server_asap.ParameterServerASAP_SGD">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.core.parameter_server_asap.</span></span><span class="sig-name descname"><span class="pre">ParameterServerASAP_SGD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="src.config.html#src.config.ConfigParameters" title="src.config.ConfigParameters"><span class="pre">ConfigParameters</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/core/parameter_server_asap.html#ParameterServerASAP_SGD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.parameter_server_asap.ParameterServerASAP_SGD" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="src.core.parameter_server.html#src.core.parameter_server.ParameterServer" title="src.core.parameter_server.ParameterServer"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterServer</span></code></a></p>
+<p>“Instance-based Adaptiveness to Staleness in Asynchronous SGD”
+(<a class="reference external" href="https://proceedings.mlr.press/v162/backstrom22a/backstrom22a.pdf">https://proceedings.mlr.press/v162/backstrom22a/backstrom22a.pdf</a>).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.parameter_server_asap.ParameterServerASAP_SGD.push">
+<span class="sig-name descname"><span class="pre">push</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="src.core.data_types.html#src.core.data_types.ParameterServerStatus" title="src.core.data_types.ParameterServerStatus"><span class="pre">ParameterServerStatus</span></a></span></span><a class="reference internal" href="_modules/src/core/parameter_server_asap.html#ParameterServerASAP_SGD.push"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.parameter_server_asap.ParameterServerASAP_SGD.push" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-src.core.parameter_server_dasgd">
+<span id="src-core-parameter-server-dasgd-module"></span><h2>src.core.parameter_server_dasgd module<a class="headerlink" href="#module-src.core.parameter_server_dasgd" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.core.parameter_server_dasgd.ParameterServerDASGD">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.core.parameter_server_dasgd.</span></span><span class="sig-name descname"><span class="pre">ParameterServerDASGD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="src.config.html#src.config.ConfigParameters" title="src.config.ConfigParameters"><span class="pre">ConfigParameters</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/core/parameter_server_dasgd.html#ParameterServerDASGD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.parameter_server_dasgd.ParameterServerDASGD" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="src.core.parameter_server.html#src.core.parameter_server.ParameterServer" title="src.core.parameter_server.ParameterServer"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterServer</span></code></a></p>
+<p>“Asynchronous SGD with stale gradient dynamic adjustment for deep learning training”
+(<a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0020025524011344?via%3Dihub">https://www.sciencedirect.com/science/article/pii/S0020025524011344?via%3Dihub</a>)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.parameter_server_dasgd.ParameterServerDASGD.push">
+<span class="sig-name descname"><span class="pre">push</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="src.core.data_types.html#src.core.data_types.ParameterServerStatus" title="src.core.data_types.ParameterServerStatus"><span class="pre">ParameterServerStatus</span></a></span></span><a class="reference internal" href="_modules/src/core/parameter_server_dasgd.html#ParameterServerDASGD.push"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.parameter_server_dasgd.ParameterServerDASGD.push" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-src.core.parameter_server_saasgd">
+<span id="src-core-parameter-server-saasgd-module"></span><h2>src.core.parameter_server_saasgd module<a class="headerlink" href="#module-src.core.parameter_server_saasgd" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.core.parameter_server_saasgd.ParameterServerSAASGD">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.core.parameter_server_saasgd.</span></span><span class="sig-name descname"><span class="pre">ParameterServerSAASGD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="src.config.html#src.config.ConfigParameters" title="src.config.ConfigParameters"><span class="pre">ConfigParameters</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/core/parameter_server_saasgd.html#ParameterServerSAASGD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.parameter_server_saasgd.ParameterServerSAASGD" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="src.core.parameter_server.html#src.core.parameter_server.ParameterServer" title="src.core.parameter_server.ParameterServer"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterServer</span></code></a></p>
+<p>Staleness-aware Async-SGD Implementation from the paper:
+“Staleness-aware Asynchronous SGD for Distributed Deep Learning” (<a class="reference external" href="https://arxiv.org/pdf/1511.05950">https://arxiv.org/pdf/1511.05950</a>).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.parameter_server_saasgd.ParameterServerSAASGD.push">
+<span class="sig-name descname"><span class="pre">push</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="src.core.data_types.html#src.core.data_types.ParameterServerStatus" title="src.core.data_types.ParameterServerStatus"><span class="pre">ParameterServerStatus</span></a></span></span><a class="reference internal" href="_modules/src/core/parameter_server_saasgd.html#ParameterServerSAASGD.push"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.parameter_server_saasgd.ParameterServerSAASGD.push" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-src.core.train_runner">
+<span id="src-core-train-runner-module"></span><h2>src.core.train_runner module<a class="headerlink" href="#module-src.core.train_runner" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.core.train_runner.PSManager">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.core.train_runner.</span></span><span class="sig-name descname"><span class="pre">PSManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">authkey</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">serializer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pickle'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">shutdown_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/core/train_runner.html#PSManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.train_runner.PSManager" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseManager</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.train_runner.PSManager.ParameterServer">
+<span class="sig-name descname"><span class="pre">ParameterServer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.core.train_runner.PSManager.ParameterServer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.train_runner.PSManager.get_hist">
+<span class="sig-name descname"><span class="pre">get_hist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.core.train_runner.PSManager.get_hist" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.train_runner.PSManager.get_staleness_stats">
+<span class="sig-name descname"><span class="pre">get_staleness_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.core.train_runner.PSManager.get_staleness_stats" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.train_runner.PSManager.get_time_push">
+<span class="sig-name descname"><span class="pre">get_time_push</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.core.train_runner.PSManager.get_time_push" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.train_runner.run_training">
+<span class="sig-prename descclassname"><span class="pre">src.core.train_runner.</span></span><span class="sig-name descname"><span class="pre">run_training</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dataset_builder:</span> <span class="pre">~typing.Callable[[int,</span> <span class="pre">int,</span> <span class="pre">int],</span> <span class="pre">~typing.Tuple[~torch.utils.data.dataloader.DataLoader,</span> <span class="pre">int]],</span> <span class="pre">model:</span> <span class="pre">~typing.Callable[[int],</span> <span class="pre">~torch.nn.modules.module.Module],</span> <span class="pre">param:</span> <span class="pre">~src.config.ConfigParameters</span> <span class="pre">=</span> <span class="pre">ConfigParameters(num_workers=5,</span> <span class="pre">staleness=50,</span> <span class="pre">lr=0.01,</span> <span class="pre">local_steps=1,</span> <span class="pre">batch_size=10,</span> <span class="pre">device='cpu',</span> <span class="pre">log_level=20,</span> <span class="pre">tol=1e-08,</span> <span class="pre">Amplitude=1),</span> <span class="pre">parameter_server:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'src.core.parameter_server.ParameterServer'&gt;,</span> <span class="pre">asgd_worker:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">worker&gt;</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/src/core/train_runner.html#run_training"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.train_runner.run_training" title="Link to this definition"></a></dt>
+<dd><p>Helper function to run the Stale Synchronous Parallel training with the provided dataset builder, model and configuration parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset_builder</strong> – Function used to build the dataset.</p></li>
+<li><p><strong>model</strong> – Model class to be trained.</p></li>
+<li><p><strong>param</strong> (<a class="reference internal" href="src.config.html#src.config.ConfigParameters" title="src.config.ConfigParameters"><em>ConfigParameters</em></a>) – SSP Configuration parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The final model parameters after training.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[torch.Tensor]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-src.core.utils">
+<span id="src-core-utils-module"></span><h2>src.core.utils module<a class="headerlink" href="#module-src.core.utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.utils.build_model">
+<span class="sig-prename descclassname"><span class="pre">src.core.utils.</span></span><span class="sig-name descname"><span class="pre">build_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Module</span></span></span><a class="reference internal" href="_modules/src/core/utils.html#build_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.utils.build_model" title="Link to this definition"></a></dt>
+<dd><p>Build a model instance from the provided parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>theta</strong> (<em>list</em><em>[</em><em>torch.Tensor</em><em>]</em>) – List of model parameters.</p></li>
+<li><p><strong>model_cls</strong> (<em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>nn.Module</em><em>]</em>) – Model class to be instantiated.</p></li>
+<li><p><strong>input_dim</strong> (<em>int</em>) – Input dimension of the model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Model instance with the provided parameters.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.utils.evaluate_model">
+<span class="sig-prename descclassname"><span class="pre">src.core.utils.</span></span><span class="sig-name descname"><span class="pre">evaluate_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_eval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_eval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/src/core/utils.html#evaluate_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.utils.evaluate_model" title="Link to this definition"></a></dt>
+<dd><p>Evaluate the model on the provided evaluation dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – Model instance to be evaluated.</p></li>
+<li><p><strong>X_eval</strong> (<em>np.ndarray</em>) – Evaluation dataset features.</p></li>
+<li><p><strong>y_eval</strong> (<em>np.ndarray</em>) – Evaluation dataset labels.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Accuracy of the model on the evaluation dataset.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the model is not in evaluation mode.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.utils.exp_delay">
+<span class="sig-prename descclassname"><span class="pre">src.core.utils.</span></span><span class="sig-name descname"><span class="pre">exp_delay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0001</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/src/core/utils.html#exp_delay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.utils.exp_delay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.utils.l1_norm">
+<span class="sig-prename descclassname"><span class="pre">src.core.utils.</span></span><span class="sig-name descname"><span class="pre">l1_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/src/core/utils.html#l1_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.utils.l1_norm" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.utils.l2_norm">
+<span class="sig-prename descclassname"><span class="pre">src.core.utils.</span></span><span class="sig-name descname"><span class="pre">l2_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/src/core/utils.html#l2_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.utils.l2_norm" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.utils.parse_args">
+<span class="sig-prename descclassname"><span class="pre">src.core.utils.</span></span><span class="sig-name descname"><span class="pre">parse_args</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/core/utils.html#parse_args"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.utils.parse_args" title="Link to this definition"></a></dt>
+<dd><p>Parse command line arguments.
+User will have to choose the amount of overparametrization between 110%, 150% and 200%.
+:param overparam: Percentage of features vs samples.
+:return: Parsed arguments.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.utils.set_seed">
+<span class="sig-prename descclassname"><span class="pre">src.core.utils.</span></span><span class="sig-name descname"><span class="pre">set_seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/core/utils.html#set_seed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.utils.set_seed" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.utils.sgd_training">
+<span class="sig-prename descclassname"><span class="pre">src.core.utils.</span></span><span class="sig-name descname"><span class="pre">sgd_training</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criterion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">MSELoss()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/core/utils.html#sgd_training"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.utils.sgd_training" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.utils.sparsity_ratio">
+<span class="sig-prename descclassname"><span class="pre">src.core.utils.</span></span><span class="sig-name descname"><span class="pre">sparsity_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/src/core/utils.html#sparsity_ratio"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.utils.sparsity_ratio" title="Link to this definition"></a></dt>
+<dd><p>L1/L2 ratio: higher → more diffuse weights, lower → more concentrated.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.utils.weight_kurtosis">
+<span class="sig-prename descclassname"><span class="pre">src.core.utils.</span></span><span class="sig-name descname"><span class="pre">weight_kurtosis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/core/utils.html#weight_kurtosis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.utils.weight_kurtosis" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-src.core.worker">
+<span id="src-core-worker-module"></span><h2>src.core.worker module<a class="headerlink" href="#module-src.core.worker" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.worker.worker">
+<span class="sig-prename descclassname"><span class="pre">src.core.worker.</span></span><span class="sig-name descname"><span class="pre">worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="src.core.parameter_server.html#src.core.parameter_server.ParameterServer" title="src.core.parameter_server.ParameterServer"><span class="pre">ParameterServer</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Module</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_builder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="src.config.html#src.config.ConfigParameters" title="src.config.ConfigParameters"><span class="pre">ConfigParameters</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_evt</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/src/core/worker.html#worker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.worker.worker" title="Link to this definition"></a></dt>
+<dd><p>Worker function for Stale Synchronous Parallel training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>w_id</strong> (<em>int</em>) – Worker ID.</p></li>
+<li><p><strong>server</strong> (<a class="reference internal" href="src.core.parameter_server.html#src.core.parameter_server.ParameterServer" title="src.core.parameter_server.ParameterServer"><em>ParameterServer</em></a>) – Parameter server</p></li>
+<li><p><strong>model</strong> (<em>Callable</em><em>[</em><em>[</em><em>int</em><em>]</em><em>, </em><em>nn.Module</em><em>]</em>) – Model class to be trained.</p></li>
+<li><p><strong>input_dim</strong> (<em>int</em>) – Input dimension of the model.</p></li>
+<li><p><strong>dataset_builder</strong> (<em>Callable</em><em>[</em><em>[</em><em>int</em><em>,</em><em>int</em><em>,</em><em>int</em><em>]</em><em>, </em><em>Tuple</em><em>[</em><em>torch.utils.data.DataLoader</em><em>,</em><em>int</em><em>]</em><em>]</em><em>+</em>) – Function used to build the dataset.</p></li>
+<li><p><strong>param</strong> (<a class="reference internal" href="src.config.html#src.config.ConfigParameters" title="src.config.ConfigParameters"><em>ConfigParameters</em></a>) – SSP Configuration parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-src.core">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-src.core" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Generalization Analysis of Asynchronous SGD Variants" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="src.models.html" class="btn btn-neutral float-right" title="src.models package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Federico Villa, Caspar Amery, Marco Lourenco.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
