@@ -6,7 +6,7 @@ Project Report : [Read Here](https://github.com/federicovilla55/optML_mini_proje
 
 In order to run the main ASGD variants script, you have to be placed at the root of the project. Then, you can run the following command in the command shell:
 ```
-python -m ASGD.run_tests <asgd_variant_name> <overparam_number>
+python -m src.run_tests <asgd_variant_name> <overparam_number>
 ```
 
 where
@@ -18,15 +18,15 @@ Below is the project structure along with explanations of the key components to 
 ```
 .
 │
-├── ASGD                # Main folder with code files and saved results
+├── src                 # Main folder with code files and saved results
 │   ├── config.py
 │   ├── core            # Code related to Asynchronous framework
 │   ├── data            # Code related to the data set used
 │   ├── experiments
 │   │   ├── ckpt        # Saved results folder
 │   │   ├── asap_sgd.py # ASAP model running script
-│   │   ├── dasgd.py    # DASGD model running script 
-│   │   └── saasgd.py   # SAASGD model running script
+│   │   ├── dsrc.py    # DASGD model running script 
+│   │   └── sasrc.py   # SAASGD model running script
 │   ├── models
 │   └── run_tests.py    # File running the main script
 │ 

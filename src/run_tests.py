@@ -7,8 +7,8 @@ def main():
     It accepts two arguments: test and overparameterization.
 
     E.g. to run the script:
-    `python ASGD/run_tests.py dasgd 200`
-    `python -m ASGD.run_tests saasgd 110`
+    `python src/run_tests.py dasgd 200`
+    `python -m src.run_tests saasgd 110`
 
     :param test: The test/experiment to run. Options are 'saasgd', 'dasgd', 'asap_sgd'.
     :param overparam: The overparameterization size. Options are '110', '150', '200'.
@@ -19,7 +19,7 @@ def main():
     parser.add_argument('overparam', choices=['110', '150', '200'], help='The overparameterization size.')
     args = parser.parse_args()
 
-    module_path = f'ASGD.experiments.{args.test}'
+    module_path = f'src.experiments.{args.test}'
     cmd = ['python', '-m', module_path, '--overparam', args.overparam]
     
     subprocess.run(cmd)

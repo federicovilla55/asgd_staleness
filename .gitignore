@@ -21,3 +21,6 @@ env/
 
 # Ignore temporary files
 *.tmp
+
+# Ignore Sphinx build directory
+docs/build/

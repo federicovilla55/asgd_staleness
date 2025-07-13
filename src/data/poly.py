@@ -36,10 +36,7 @@ class PolyVariedBuilder(AbstractDataBuilder):
         degrees = rng.randint(1, max_degree + 1, size=n_features)
         X_pow = np.stack([X[:, i] ** d for i, d in enumerate(degrees)], axis=1)
         y = X_pow @ w + noise * rng.randn(n_samples)
-        return X.astype(np.float32), y.astype(np.float32), degrees
-
-
-    
+        return X.astype(np.float32), y.astype(np.float32), degrees    
 
     def _build_dataset(self):
         rng = np.random.RandomState(self.seed)

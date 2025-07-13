@@ -2,7 +2,7 @@
 Test SA-ASGD against standard SGD on linear regression with synthetic overparameterized data.
 
 From the base repository directory:  
-`python -m ASGD.experiments.saasgd`
+`python -m src.experiments.saasgd`
 
 The implemented SA-ASGD algorithm is taken from: "Staleness-aware Asynchronous SGD for Distributed Deep Learning" (https://arxiv.org/pdf/1511.05950).
 """

@@ -29,8 +29,8 @@ def create_poly_varied_dataset(n_samples=100,
       - X sampled U(-3, 3)
       - Each feature i raised to its own degree_i ∈ [1, max_degree]
       - y = sum_i w_true[i] * (X[:, i] ** degree_i) + noise
-    Returns:
-      X_raw, y, degrees
+      
+    Return: X_raw, y, degrees
     """
     rng = np.random.RandomState(random_state)
     X = rng.uniform(-3, 3, size=(n_samples, n_features))
