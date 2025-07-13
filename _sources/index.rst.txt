@@ -23,3 +23,17 @@ Code Documentation
    src.experiments
    src.config
    src.run_tests
+
+Project Repository
+------------------
+
+.. raw:: html
+
+    <p>
+      <a href="https://github.com/federicovilla55/asgd_staleness" target="_blank" rel="noopener noreferrer">
+        <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" 
+             alt="GitHub Repository" 
+             style="width:32px; height:32px; vertical-align:middle; margin-right:8px;">
+        GitHub Repository
+      </a>
+    </p>
