@@ -76,10 +76,25 @@
              
   <section id="generalization-analysis-of-asynchronous-sgd-variants">
 <h1>Generalization Analysis of Asynchronous SGD Variants<a class="headerlink" href="#generalization-analysis-of-asynchronous-sgd-variants" title="Link to this heading"></a></h1>
+<p>Asynchronous Stochastic Gradient Descent (ASGD) improves training efficiency by enabling parallel workers to update model parameters asynchronously, which introduces staleness in the updates.</p>
+<a class="reference internal image-reference" href="_images/ASGD.png"><img alt="ASGD Diagram" class="align-center" src="_images/ASGD.png" style="width: 600px;" />
+</a>
+<p>While convergence of ASGD algorithms is well established, their impact on generalization is less explored.</p>
+<p>Our study shows that Asynchronous SGD methods achieve comparable convergence and equal or better generalization than standard SGD despite staleness.</p>
 <section id="project-report">
 <h2>Project Report<a class="headerlink" href="#project-report" title="Link to this heading"></a></h2>
 <p><a class="reference external" href="Generalization_of_Asynchronous_SGD_Variants.pdf">Generalization of Asynchronous SGD Variants.pdf</a></p>
 </section>
+<section id="project-repository">
+<h2>Project Repository<a class="headerlink" href="#project-repository" title="Link to this heading"></a></h2>
+<p>
+  <a href="https://github.com/federicovilla55/asgd_staleness" target="_blank" rel="noopener noreferrer">
+    <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+         alt="GitHub Repository"
+         style="width:32px; height:32px; vertical-align:middle; margin-right:8px;">
+    GitHub Repository
+  </a>
+</p></section>
 <section id="code-documentation">
 <h2>Code Documentation<a class="headerlink" href="#code-documentation" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
@@ -244,16 +259,6 @@
 </ul>
 </div>
 </section>
-<section id="project-repository">
-<h2>Project Repository<a class="headerlink" href="#project-repository" title="Link to this heading"></a></h2>
-<p>
-  <a href="https://github.com/federicovilla55/asgd_staleness" target="_blank" rel="noopener noreferrer">
-    <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-         alt="GitHub Repository"
-         style="width:32px; height:32px; vertical-align:middle; margin-right:8px;">
-    GitHub Repository
-  </a>
-</p></section>
 </section>
 
 

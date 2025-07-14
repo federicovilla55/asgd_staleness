@@ -6,23 +6,21 @@
 Generalization Analysis of Asynchronous SGD Variants
 ==================================================================
 
+Asynchronous Stochastic Gradient Descent (ASGD) improves training efficiency by enabling parallel workers to update model parameters asynchronously, which introduces staleness in the updates.
+
+.. image:: images/ASGD.png
+   :alt: ASGD Diagram
+   :width: 600px
+   :align: center
+
+While convergence of ASGD algorithms is well established, their impact on generalization is less explored. 
+
+Our study shows that Asynchronous SGD methods achieve comparable convergence and equal or better generalization than standard SGD despite staleness.
+
 Project Report
 --------------
 
 `Generalization of Asynchronous SGD Variants.pdf <Generalization_of_Asynchronous_SGD_Variants.pdf>`_
-
-Code Documentation
-------------------
-
-.. toctree::
-   :maxdepth: 5
-
-   src.core
-   src.models
-   src.data
-   src.experiments
-   src.config
-   src.run_tests
 
 Project Repository
 ------------------
@@ -37,3 +35,17 @@ Project Repository
         GitHub Repository
       </a>
     </p>
+
+
+Code Documentation
+------------------
+
+.. toctree::
+   :maxdepth: 5
+
+   src.core
+   src.models
+   src.data
+   src.experiments
+   src.config
+   src.run_tests
